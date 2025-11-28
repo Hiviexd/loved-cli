@@ -1,11 +1,21 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import nunjucks from "nunjucks";
 
 /**
- * Service for loading and rendering text templates
+ * Service for loading and rendering text templates using Nunjucks
  */
 export class TemplateService {
-    constructor(private resourcesPath: string = "resources") {}
+    private env: nunjucks.Environment;
+
+    constructor(private resourcesPath: string = "resources") {
+        // Configure nunjucks with autoescape disabled (we handle escaping ourselves)
+        this.env = nunjucks.configure(resourcesPath, {
+            autoescape: false,
+            trimBlocks: true,
+            lstripBlocks: true,
+        });
+    }
 
     /**
      * Loads a template file from the resources directory
@@ -15,27 +25,23 @@ export class TemplateService {
     }
 
     /**
-     * Renders a template with variable substitution and script evaluation
-     *
-     * Supports two syntaxes:
-     * - `{{variable}}` - Simple variable substitution
-     * - `<?js code ?>` - JavaScript evaluation (result is inserted)
+     * Renders a template string with variable substitution
      *
      * @param template - The template string
      * @param vars - Variables to substitute
      */
     render(template: string, vars: Record<string, unknown>): string {
-        return template
-            .replace(/<\?(.+?)\?>/gs, (_, script: string) => {
-                // vars is accessed by eval'd scripts
-                const result = eval(script);
-                return result == null ? "" : String(result);
-            })
-            .replace(/{{(.+?)}}/g, (match, key: string) => {
-                const value = vars[key.trim()];
-                return value == null ? match : String(value);
-            })
-            .trim();
+        return this.env.renderString(template, vars).trim();
+    }
+
+    /**
+     * Renders a template file with variable substitution
+     *
+     * @param templateName - The template file name
+     * @param vars - Variables to substitute
+     */
+    renderFile(templateName: string, vars: Record<string, unknown>): string {
+        return this.env.render(templateName, vars).trim();
     }
 }
 

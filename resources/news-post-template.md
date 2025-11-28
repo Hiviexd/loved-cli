@@ -2,32 +2,28 @@
 layout: post
 title: "{{TITLE}}"
 date: {{DATE}} {{TIME}} +0000
-series: Project Loved
+series: project_loved
 ---
 
 {{HEADER}}
 
-![](/wiki/shared/news/banners/project-loved-2.jpg)<?
-if (vars.INTRO) {
-`
+![](/wiki/shared/news/banners/project-loved-2.jpg)
+{% if INTRO %}
 
-${vars.INTRO}`
-} ?>
+{{INTRO}}
+{% endif %}
 
 ### Navigation
 
-<?
-vars.GAME_MODES.map(
-	(m) => `- **[${m.longName}](#${m.longName})** ([Download pack](${vars.PACK_URLS[m.id]}))`,
-).join('\n')
-?><?
-if (vars.VIDEO) {
-`
+{% for m in GAME_MODES %}
+- **[{{m.longName}}](#{{m.longName}})** ([Download pack]({{PACK_URLS[m.id]}}))
+{% endfor %}
+{% if VIDEO %}
 
 ## Summary
 
-${vars.VIDEO}`
-} ?>
+{{VIDEO}}
+{% endif %}
 
 {{NOMINATIONS}}
 
