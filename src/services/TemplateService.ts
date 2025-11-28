@@ -27,9 +27,8 @@ export class TemplateService {
     render(template: string, vars: Record<string, unknown>): string {
         return template
             .replace(/<\?(.+?)\?>/gs, (_, script: string) => {
-                // Create a function that has access to vars
-                const fn = new Function(...Object.keys(vars), `return ${script}`);
-                const result = fn(...Object.values(vars));
+                // vars is accessed by eval'd scripts
+                const result = eval(script);
                 return result == null ? "" : String(result);
             })
             .replace(/{{(.+?)}}/g, (match, key: string) => {
