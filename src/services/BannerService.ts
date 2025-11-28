@@ -4,7 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createCanvas, loadImage, registerFont, type Image } from "canvas";
 import sharp from "sharp";
-import { NoTraceError } from "../utils/logger.js";
+import { logWarning } from "../utils/logger.js";
 import { formatPercent } from "../utils/formatting.js";
 
 // Canvas dimensions
@@ -115,6 +115,26 @@ export class BannerService {
         const unscaledBackgroundImageX = (UNSCALED_WIDTH - unscaledBackgroundImageWidth) / 2;
         const unscaledBackgroundImageY = (UNSCALED_HEIGHT - unscaledBackgroundImageHeight) / 2;
 
+        // Check and truncate title if needed (using 1x scale for measurement)
+        const tempCanvas = createCanvas(UNSCALED_WIDTH, UNSCALED_HEIGHT);
+        const tempContext = tempCanvas.getContext("2d");
+        tempContext.font = "21px Torus";
+        const titleMaxWidth = UNSCALED_WIDTH - 2 * 16;
+        let displayTitle = title;
+
+        const titleWidth = tempContext.measureText(title).width;
+        if (titleWidth > titleMaxWidth) {
+            const overflowPercent = formatPercent(titleWidth / titleMaxWidth - 1);
+            logWarning(`Title is ${overflowPercent} wider than the available space. Truncating title: "${title}"`);
+
+            // Truncate title to fit, adding ellipsis if needed
+            let truncatedTitle = title;
+            while (tempContext.measureText(truncatedTitle + "...").width > titleMaxWidth && truncatedTitle.length > 0) {
+                truncatedTitle = truncatedTitle.slice(0, -1);
+            }
+            displayTitle = truncatedTitle.length < title.length ? truncatedTitle + "..." : truncatedTitle;
+        }
+
         // Generate banners at each scale
         for (const scale of SCALES) {
             const width = UNSCALED_WIDTH * scale;
@@ -144,19 +164,7 @@ export class BannerService {
             context.shadowOffsetY = 3 * scale;
             context.textAlign = "right";
             context.textBaseline = "bottom";
-            context.fillText(title, width - 16 * scale, height - 31 * scale);
-
-            // Check for overflowing title text
-            const titleMaxWidth = width - 2 * 16 * scale;
-            const titleOverflow = context.measureText(title).width / titleMaxWidth - 1;
-
-            if (titleOverflow > 0) {
-                throw new NoTraceError(
-                    `Title is ${formatPercent(
-                        titleOverflow
-                    )} wider than the available space. Add a banner title override for this map in config.json`
-                );
-            }
+            context.fillText(displayTitle, width - 16 * scale, height - 31 * scale);
 
             // Render to JPEG
             const buffer = canvas.toBuffer("image/jpeg", { quality: 1 });
