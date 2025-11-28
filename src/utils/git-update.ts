@@ -1,0 +1,70 @@
+import { spawnSync } from "node:child_process";
+import { readFile, writeFile } from "node:fs/promises";
+import { platform } from "node:process";
+import { logInfo, logSuccess, logWarning } from "./logger.js";
+
+const updateCachePath = "config/update-cache";
+
+/**
+ * Checks for git updates and applies them if available
+ * @param force - Force check even if recently checked
+ */
+export async function tryUpdate(force = false): Promise<void> {
+    // Don't check for updates more than once every 6 hours
+    if (!force) {
+        const updateCache = await readFile(updateCachePath, "utf8").catch(() => "0");
+        const lastUpdateTime = Number.parseInt(updateCache, 10);
+
+        if (!Number.isNaN(lastUpdateTime) && Date.now() - lastUpdateTime < 1000 * 60 * 60 * 6) {
+            return;
+        }
+    }
+
+    // Check execute permission for git and npm
+    if (
+        spawnSync("git", ["--version"]).error != null ||
+        spawnSync("pnpm", ["--version"], { shell: platform === "win32" }).error != null
+    ) {
+        logWarning("Skipping update check: missing git or pnpm");
+        return;
+    }
+
+    // Check repository status
+    if (spawnSync("git", ["symbolic-ref", "--short", "HEAD"]).stdout.toString().trim() !== "master") {
+        logWarning("Skipping update check: branch not set to master");
+        return;
+    }
+
+    if (spawnSync("git", ["diff", "--quiet"]).status !== 0) {
+        logWarning("Skipping update check: working directory not clean");
+        return;
+    }
+
+    // Check for and apply updates
+    logInfo("Checking for updates");
+
+    spawnSync("git", ["fetch", "--quiet"]);
+    const update = spawnSync("git", ["diff", "--quiet", "..FETCH_HEAD"]).status === 1;
+
+    if (update) {
+        spawnSync("git", ["merge", "--ff-only", "--quiet", "FETCH_HEAD"]);
+
+        const commitHash = spawnSync("git", ["show", "--format=%h", "--no-patch", "HEAD"]).stdout.toString().trim();
+        logSuccess(`Updated to ${commitHash}`);
+
+        spawnSync("pnpm", ["install"], { shell: platform === "win32", stdio: "ignore" });
+        logSuccess("Installed/upgraded node packages");
+    } else {
+        logInfo("No update found");
+    }
+
+    // Save last update time
+    await writeFile(updateCachePath, `${Date.now()}\n`);
+
+    // Restart program if updated
+    if (update) {
+        logWarning("Restarting...\n");
+        spawnSync(process.argv[0], process.argv.slice(1), { stdio: "inherit" });
+        process.exit();
+    }
+}
