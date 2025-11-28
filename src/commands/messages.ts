@@ -11,18 +11,21 @@ import { tryUpdate } from "../utils/git-update.js";
 import type { Nomination, GameModeExtraInfo, User } from "../models/types.js";
 
 /**
- * Prompts the user for input
+ * Prompts the user for input with an optional default value
  */
-async function prompt(question: string): Promise<string> {
+async function prompt(question: string, defaultValue?: string): Promise<string> {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
     });
 
+    const defaultHint = defaultValue ? chalk.dim(` (${defaultValue})`) : "";
+    const fullQuestion = `${question}${defaultHint}: `;
+
     return new Promise((resolve) => {
-        rl.question(question, (answer) => {
+        rl.question(fullQuestion, (answer) => {
             rl.close();
-            resolve(answer);
+            resolve(answer.trim() || defaultValue || "");
         });
     });
 }
@@ -30,16 +33,29 @@ async function prompt(question: string): Promise<string> {
 /**
  * Sends notification PMs to mappers for a nomination
  */
-async function sendNotifyPm(
-    osuApi: OsuApiService,
-    nominations: Nomination[],
-    extraGameModeInfo: Record<number, GameModeExtraInfo>,
-    roundName: string,
-    hostTemplate: string,
-    guestTemplate: string,
-    pollStartGuess: string,
-    dryRun: boolean
-): Promise<void> {
+async function sendNotifyPm({
+    osuApi,
+    nominations,
+    extraGameModeInfo,
+    roundName,
+    hostTemplate,
+    guestTemplate,
+    pollStartGuess,
+    newsAuthorName,
+    newsAuthorId,
+    dryRun,
+}: {
+    osuApi: OsuApiService;
+    nominations: Nomination[];
+    extraGameModeInfo: Record<number, GameModeExtraInfo>;
+    roundName: string;
+    hostTemplate: string;
+    guestTemplate: string;
+    pollStartGuess: string;
+    newsAuthorName: string;
+    newsAuthorId: number;
+    dryRun: boolean;
+}): Promise<void> {
     if (nominations.length === 0) {
         throw new Error("No nominations provided");
     }
@@ -93,6 +109,8 @@ async function sendNotifyPm(
                 : null,
         POLL_START: pollStartGuess,
         ROUND_NAME: roundName,
+        ROUND_AUTHOR_NAME: newsAuthorName,
+        ROUND_AUTHOR_ID: newsAuthorId,
         TITLE: escapeMarkdown(beatmapset.original_title || beatmapset.title),
         ...gameModeVars,
     });
@@ -123,6 +141,8 @@ async function sendNotifyPm(
             ARTIST: escapeMarkdown(beatmapset.original_artist || beatmapset.artist),
             BEATMAPSET_ID: beatmapset.id,
             ROUND_NAME: roundName,
+            ROUND_AUTHOR_NAME: newsAuthorName,
+            ROUND_AUTHOR_ID: newsAuthorId,
             TITLE: escapeMarkdown(beatmapset.original_title || beatmapset.title),
         });
 
@@ -163,10 +183,10 @@ export const messagesCommand = new Command("messages")
         // Get poll start guess
         let pollStartGuess = options.pollStart;
         if (!pollStartGuess) {
-            pollStartGuess = await prompt(chalk.yellow('When do polls start? (e.g., "next weekend", "very soon"): '));
-            if (!pollStartGuess.trim()) {
-                pollStartGuess = "soon";
-            }
+            pollStartGuess = await prompt(
+                chalk.yellow('When do polls start? (e.g., "next weekend", "in 5 days")'),
+                "soon"
+            );
         }
 
         const lovedWeb = new LovedWebService(config.lovedBaseUrl, config.lovedApiKey);
@@ -190,16 +210,18 @@ export const messagesCommand = new Command("messages")
                 (n) => n.beatmapset_id === nomination.beatmapset_id
             );
 
-            await sendNotifyPm(
+            await sendNotifyPm({
                 osuApi,
-                relatedNominations,
-                roundInfo.extraGameModeInfo,
-                roundInfo.name,
+                nominations: relatedNominations,
+                extraGameModeInfo: roundInfo.extraGameModeInfo,
+                roundName: roundInfo.name,
                 hostTemplate,
                 guestTemplate,
                 pollStartGuess,
-                options.dryRun
-            ).catch(logAndExit);
+                newsAuthorName: roundInfo.newsAuthorName,
+                newsAuthorId: roundInfo.newsAuthorId,
+                dryRun: options.dryRun,
+            }).catch(logAndExit);
         }
 
         if (options.dryRun) {
