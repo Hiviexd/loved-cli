@@ -1,7 +1,7 @@
 /**
  * Characters that have special meaning in Markdown and need escaping
  */
-const MARKDOWN_SPECIAL_CHARS = /[\\*_~`\[\]()#>+\-.|!]/g;
+const MARKDOWN_SPECIAL_CHARS = /[\]\\*_~`[()#>+\-.|!]/g;
 
 /**
  * Escapes a single markdown special character
@@ -89,7 +89,7 @@ export function convertToMarkdown(bbcode: string): string {
     let placeholderIndex = 0;
 
     function createPlaceholder(markdown: string): string {
-        const key = `\x00PH${placeholderIndex++}\x00`;
+        const key = `__PLACEHOLDER_${placeholderIndex++}__`;
         placeholders.set(key, markdown);
         return key;
     }
@@ -132,7 +132,7 @@ export function convertToMarkdown(bbcode: string): string {
 
     // Now escape any remaining markdown special characters in non-placeholder text
     // Split by placeholders, escape, and rejoin
-    const parts = result.split(/(\x00PH\d+\x00)/);
+    const parts = result.split(/(__PLACEHOLDER_\d+__)/);
     result = parts
         .map((part) => {
             if (placeholders.has(part)) {

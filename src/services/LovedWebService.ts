@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import chalk from "chalk";
 import Ruleset from "../models/Ruleset.js";
 import type { RoundInfo, Nomination, GameModeExtraInfo, User } from "../models/types.js";
 import { NoTraceError, logInfo, logWarning } from "../utils/logger.js";

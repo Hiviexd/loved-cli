@@ -28,7 +28,6 @@ export class TemplateService {
         return template
             .replace(/<\?(.+?)\?>/gs, (_, script: string) => {
                 // Create a function that has access to vars
-                // eslint-disable-next-line @typescript-eslint/no-implied-eval
                 const fn = new Function(...Object.keys(vars), `return ${script}`);
                 const result = fn(...Object.values(vars));
                 return result == null ? "" : String(result);
