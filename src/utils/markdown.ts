@@ -1,28 +1,34 @@
 /**
- * Characters that have special meaning in Markdown and need escaping
- */
-const MARKDOWN_SPECIAL_CHARS = /[\]\\*_~`[()#>+\-.|!]/g;
-
-/**
- * Escapes a single markdown special character
- */
-function escapeChar(char: string): string {
-    return `\\${char}`;
-}
-
-/**
- * Escapes all markdown special characters in plain text.
- * Use this when you want text to appear literally in markdown output.
+ * Escapes Markdown syntax so the text renders literally.
+ * Handles universal symbols, image markers, and structural
+ * elements at line start (headings, blockquotes, list bullets).
  *
- * @example
- * escapeMarkdown("Hello *world*") // "Hello \\*world\\*"
- * escapeMarkdown("[test]") // "\\[test\\]"
+ * @param text - Text to escape.
+ * @returns Escaped Markdown-safe text.
  */
 export function escapeMarkdown(text: string): string {
-    if (typeof text !== "string") {
-        return String(text);
-    }
-    return text.replace(MARKDOWN_SPECIAL_CHARS, escapeChar);
+    if (typeof text !== "string") return String(text);
+
+    // Escape universal special characters
+    text = text.replace(/[\\`*_{}[\]<>]/g, m => "\\" + m);
+
+    // Escape image markers "![" → "\!["
+    text = text.replace(/!\[/g, "\\![");
+
+    // Escape headings only at start of line: "# "
+    text = text.replace(/^(#+)(\s)/gm, (_, hashes, space) => {
+        return `${"\\".repeat(hashes.length)}${hashes}${space}`;
+    });
+
+    // Escape blockquotes only at start: "> "
+    text = text.replace(/^>(\s)/gm, "\\>$1");
+
+    // Escape list markers only at start of line: "-", "*", "+"
+    text = text.replace(/^(\s*)([*+-])(\s)/gm, (_, indent, bullet, space) => {
+        return `${indent}\\${bullet}${space}`;
+    });
+
+    return text;
 }
 
 /**
