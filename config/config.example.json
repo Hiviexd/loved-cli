@@ -1,13 +1,12 @@
 {
-  "botApiClient": {
-    "id": "",
-    "secret": ""
-  },
-  "bannerTitleOverrides": {},
-  "lovedApiKey": "",
-  "lovedBaseUrl": "https://loved.sh",
-  "lovedRoundId": 0,
-  "osuBaseUrl": "https://osu.ppy.sh",
-  "osuWikiPath": ""
+    "botApiClient": {
+        "id": "",
+        "secret": ""
+    },
+    "bannerTitleOverrides": {},
+    "lovedApiKey": "",
+    "lovedBaseUrl": "https://loved.sh",
+    "lovedRoundId": 0,
+    "osuBaseUrl": "https://osu.ppy.sh",
+    "osuWikiPath": ""
 }
-
