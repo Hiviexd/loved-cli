@@ -93,6 +93,7 @@ export interface RoundInfo {
     introPreview: string;
     name: string;
     newsAuthorName: string;
+    newsAuthorId: number;
     nominations: Nomination[];
     outro: string;
     postTime: Date;

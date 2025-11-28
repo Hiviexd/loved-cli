@@ -121,6 +121,7 @@ export class LovedWebService {
                 introPreview: round.news_intro_preview ?? "",
                 name: round.name,
                 newsAuthorName: round.news_author.name,
+                newsAuthorId: round.news_author.id,
                 nominations: (nominations as Nomination[]).filter((n) => n.parent_id == null),
                 outro: round.news_outro ?? "",
                 postTime: new Date(round.news_posted_at),
