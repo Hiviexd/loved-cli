@@ -6,8 +6,8 @@ import { loadConfig } from "../config.js";
 import { OsuApiService } from "../services/OsuApiService.js";
 import { LovedWebService } from "../services/LovedWebService.js";
 import { BannerService } from "../services/BannerService.js";
-import { DiscordService } from "../services/DiscordService.js";
 import { templateService } from "../services/TemplateService.js";
+import { getBackgroundDir } from "./maps-download.js";
 import Ruleset from "../models/Ruleset.js";
 import type { Nomination, RoundInfo, Beatmapset, Beatmap } from "../models/types.js";
 import { logAndExit, logInfo, logSuccess, logWarning, log, NoTraceError } from "../utils/logger.js";
@@ -105,19 +105,25 @@ function getExtraBeatmapsetInfo(nomination: Nomination): string {
 }
 
 /**
- * Loads background paths for beatmapsets from the config directory
+ * Loads background paths for beatmapsets from the banners directory for the given round
  */
-async function loadBeatmapsetBgPaths(beatmapsets: Beatmapset[]): Promise<Record<number, string>> {
-    const dirents = await readdir("config", { withFileTypes: true });
+async function loadBeatmapsetBgPaths(roundId: number, beatmapsets: Beatmapset[]): Promise<Record<number, string>> {
+    const backgroundDir = getBackgroundDir(roundId);
     const paths: Record<number, string> = {};
 
-    for (const dirent of dirents) {
-        if (!dirent.isFile()) continue;
+    try {
+        const dirents = await readdir(backgroundDir, { withFileTypes: true });
 
-        const filenameMatch = dirent.name.match(/(\d+)\.(?:jpeg|jpg|png)/i);
-        if (filenameMatch != null) {
-            paths[Number.parseInt(filenameMatch[1])] = join("config", filenameMatch[0]);
+        for (const dirent of dirents) {
+            if (!dirent.isFile()) continue;
+
+            const filenameMatch = dirent.name.match(/(\d+)\.(?:jpeg|jpg|png)/i);
+            if (filenameMatch != null) {
+                paths[Number.parseInt(filenameMatch[1])] = join(backgroundDir, filenameMatch[0]);
+            }
         }
+    } catch {
+        logWarning(`Background directory ${backgroundDir}/ not found. Run "loved maps download" first.`);
     }
 
     for (const beatmapset of beatmapsets) {
@@ -452,7 +458,7 @@ export const newsCommand = new Command("news")
         };
 
         const beatmapsets = roundInfo.nominations.map((n) => n.beatmapset);
-        const beatmapsetBgPaths = await loadBeatmapsetBgPaths(beatmapsets).catch(logAndExit);
+        const beatmapsetBgPaths = await loadBeatmapsetBgPaths(roundId, beatmapsets).catch(logAndExit);
 
         // Assign background paths to nominations
         for (const nomination of roundInfo.allNominations) {

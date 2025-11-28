@@ -1,12 +1,24 @@
 import { Command } from "commander";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import axios from "axios";
 import chalk from "chalk";
 import { loadConfig } from "../config.js";
 import { LovedWebService } from "../services/LovedWebService.js";
-import { logAndExit, logWarning, logSuccess } from "../utils/logger.js";
+import { logAndExit, logWarning, logSuccess, logInfo } from "../utils/logger.js";
 import { tryUpdate } from "../utils/git-update.js";
+
+/**
+ * Base directory for storing background images
+ */
+const BANNERS_DIR = "banners";
+
+/**
+ * Gets the background directory path for a specific round
+ */
+export function getBackgroundDir(roundId: number): string {
+    return join(BANNERS_DIR, roundId.toString());
+}
 
 export const mapsDownloadCommand = new Command("download")
     .description("Download beatmapset background images from osu!")
@@ -27,6 +39,11 @@ export const mapsDownloadCommand = new Command("download")
         const beatmapsetIdSet = new Set(beatmapsetIds);
         const cacheKey = Math.floor(Date.now() / 1000);
 
+        // Create the backgrounds directory for this round
+        const backgroundDir = getBackgroundDir(roundId);
+        await mkdir(backgroundDir, { recursive: true });
+
+        logInfo(`Downloading backgrounds to ${backgroundDir}/`);
         console.log(chalk.dim(`Downloading backgrounds for ${beatmapsetIdSet.size} beatmapsets...`));
 
         const downloadPromises = [...beatmapsetIdSet].map(async (beatmapsetId) => {
@@ -35,7 +52,7 @@ export const mapsDownloadCommand = new Command("download")
                     `https://assets.ppy.sh/beatmaps/${beatmapsetId}/covers/fullsize.jpg?${cacheKey}`,
                     { responseType: "arraybuffer" }
                 );
-                await writeFile(join("config", `${beatmapsetId}.jpg`), response.data);
+                await writeFile(join(backgroundDir, `${beatmapsetId}.jpg`), response.data);
                 logSuccess(`Downloaded background for beatmapset #${beatmapsetId}`);
             } catch (error) {
                 if (axios.isAxiosError(error) && (error.response?.status === 403 || error.response?.status === 404)) {
@@ -47,5 +64,5 @@ export const mapsDownloadCommand = new Command("download")
         });
 
         await Promise.all(downloadPromises);
-        console.log(chalk.green("Done downloading backgrounds"));
+        console.log(chalk.green(`Done downloading backgrounds to ${backgroundDir}/`));
     });

@@ -3,4 +3,5 @@ dist/
 config/config.json
 *.log
 .DS_Store
-
+banners/*
+!banners/.gitkeep

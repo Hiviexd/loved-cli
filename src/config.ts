@@ -32,7 +32,7 @@ const ConfigSchema = z.object({
 /**
  * Schema for Discord messages
  */
-const MessagesSchema = z.object({
+export const MessagesSchema = z.object({
     discordPost: z.string(),
     discordResults: z.string(),
 });
