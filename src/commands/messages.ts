@@ -5,7 +5,7 @@ import { loadConfig } from "../config";
 import { OsuApiService } from "../services/OsuApiService";
 import { LovedWebService } from "../services/LovedWebService";
 import { MessagesService } from "../services/MessagesService";
-import { templateService } from "../services/TemplateService";
+import { TemplateService } from "../services/TemplateService";
 import { logAndExit, logInfo } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 
@@ -61,8 +61,8 @@ export const messagesCommand = new Command("messages")
         }
 
         // Load templates
-        const hostTemplate = await templateService.loadTemplate("chat-nomination-template.md");
-        const guestTemplate = await templateService.loadTemplate("chat-nomination-guest-template.md");
+        const hostTemplate = await TemplateService.loadTemplate("chat-nomination-template.md");
+        const guestTemplate = await TemplateService.loadTemplate("chat-nomination-guest-template.md");
 
         const osuApi = new OsuApiService(config.osuBaseUrl, config.botApiClient.id, config.botApiClient.secret);
 

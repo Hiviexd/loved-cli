@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { OsuApiService } from "./OsuApiService";
 import { LovedWebService } from "./LovedWebService";
 import { BannerService } from "./BannerService";
-import { templateService } from "./TemplateService";
+import { TemplateService } from "./TemplateService";
 import Ruleset from "../models/Ruleset";
 import type { Nomination, RoundInfo, Beatmapset, Beatmap } from "../models/types";
 import { logInfo, logSuccess, logWarning, log, NoTraceError } from "../utils/logger";
@@ -221,9 +221,9 @@ export class NewsService {
         }
 
         // Load templates
-        const mainTopicTemplate = await templateService.loadTemplate("main-thread-template.bbcode");
-        const mainTopicBeatmapsetTemplate = await templateService.loadTemplate("main-thread-template-beatmap.bbcode");
-        const votingPostTemplate = await templateService.loadTemplate("voting-thread-template.bbcode");
+        const mainTopicTemplate = await TemplateService.loadTemplate("main-thread-template.bbcode");
+        const mainTopicBeatmapsetTemplate = await TemplateService.loadTemplate("main-thread-template-beatmap.bbcode");
+        const votingPostTemplate = await TemplateService.loadTemplate("voting-thread-template.bbcode");
 
         const mainTopicBodies: Record<number, string> = {};
         const nominationTopicBodies: Record<number, string> = {};
@@ -246,7 +246,7 @@ export class NewsService {
                 );
 
                 mainTopicBeatmapsets.push(
-                    templateService.render(mainTopicBeatmapsetTemplate, {
+                    TemplateService.render(mainTopicBeatmapsetTemplate, {
                         BEATMAPSET: artistAndTitle,
                         BEATMAPSET_ID: beatmapset.id,
                         CREATORS: creatorsBbcode,
@@ -255,7 +255,7 @@ export class NewsService {
                     })
                 );
 
-                nominationTopicBodies[nomination.id] = templateService.render(votingPostTemplate, {
+                nominationTopicBodies[nomination.id] = TemplateService.render(votingPostTemplate, {
                     BEATMAPSET: artistAndTitle,
                     BEATMAPSET_EXTRAS: NewsService.getExtraBeatmapsetInfo(nomination),
                     BEATMAPSET_ID: beatmapset.id,
@@ -268,7 +268,7 @@ export class NewsService {
                 });
             }
 
-            mainTopicBodies[gameMode.id] = templateService.render(mainTopicTemplate, {
+            mainTopicBodies[gameMode.id] = TemplateService.render(mainTopicTemplate, {
                 BEATMAPS: mainTopicBeatmapsets.join("\n\n"),
                 CAPTAINS: joinList(
                     extraInfo.nominators.map((n) => `[url=https://osu.ppy.sh/users/${n.id}]${n.name}[/url]`)
@@ -326,9 +326,9 @@ export class NewsService {
         const packUrls: Record<number, string> = {};
 
         // Load templates
-        const newsTemplate = await templateService.loadTemplate("news-post-template.md");
-        const newsGameModeTemplate = await templateService.loadTemplate("news-post-template-mode.md");
-        const newsNominationTemplate = await templateService.loadTemplate("news-post-template-beatmap.md");
+        const newsTemplate = await TemplateService.loadTemplate("news-post-template.md");
+        const newsGameModeTemplate = await TemplateService.loadTemplate("news-post-template-mode.md");
+        const newsNominationTemplate = await TemplateService.loadTemplate("news-post-template-beatmap.md");
 
         for (const gameMode of Ruleset.all()) {
             const extraInfo = roundInfo.extraGameModeInfo[gameMode.id];
@@ -362,7 +362,7 @@ export class NewsService {
                 }
 
                 nominationStrings.push(
-                    templateService.render(newsNominationTemplate, {
+                    TemplateService.render(newsNominationTemplate, {
                         BEATMAPSET: escapeMarkdown(`${nomination.beatmapset.artist} - ${nomination.beatmapset.title}`),
                         BEATMAPSET_EXTRAS: convertToMarkdown(NewsService.getExtraBeatmapsetInfo(nomination)),
                         BEATMAPSET_ID: nomination.beatmapset.id,
@@ -385,7 +385,7 @@ export class NewsService {
             }
 
             gameModeSectionStrings.push(
-                templateService.render(newsGameModeTemplate, {
+                TemplateService.render(newsGameModeTemplate, {
                     ALL_CAPTAINS: joinList(
                         extraInfo.nominators.map((n) => `[${escapeMarkdown(n.name)}](https://osu.ppy.sh/users/${n.id})`)
                     ),
@@ -406,7 +406,7 @@ export class NewsService {
         await mkdir(dirname(newsPath), { recursive: true });
         await writeFile(
             newsPath,
-            templateService.render(newsTemplate, {
+            TemplateService.render(newsTemplate, {
                 AUTHOR: roundInfo.newsAuthorName,
                 DATE: roundInfo.postDateString,
                 GAME_MODES: gameModesPresent,

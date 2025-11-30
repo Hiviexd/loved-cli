@@ -6,22 +6,28 @@ import nunjucks from "nunjucks";
  * Service for loading and rendering text templates using Nunjucks
  */
 export class TemplateService {
-    private env: nunjucks.Environment;
+    private static readonly RESOURCES_PATH = "resources";
+    private static env: nunjucks.Environment | null = null;
 
-    constructor(private resourcesPath: string = "resources") {
-        // Configure nunjucks with autoescape disabled (we handle escaping ourselves)
-        this.env = nunjucks.configure(resourcesPath, {
-            autoescape: false,
-            trimBlocks: true,
-            lstripBlocks: true,
-        });
+    /**
+     * Initializes the nunjucks environment
+     */
+    private static initEnv(): void {
+        if (this.env === null) {
+            // Configure nunjucks with autoescape disabled (we handle escaping ourselves)
+            this.env = nunjucks.configure(this.RESOURCES_PATH, {
+                autoescape: false,
+                trimBlocks: true,
+                lstripBlocks: true,
+            });
+        }
     }
 
     /**
      * Loads a template file from the resources directory
      */
-    async loadTemplate(basename: string): Promise<string> {
-        return readFile(join(this.resourcesPath, basename), "utf8");
+    public static async loadTemplate(basename: string): Promise<string> {
+        return readFile(join(this.RESOURCES_PATH, basename), "utf8");
     }
 
     /**
@@ -30,8 +36,9 @@ export class TemplateService {
      * @param template - The template string
      * @param vars - Variables to substitute
      */
-    render(template: string, vars: Record<string, unknown>): string {
-        return this.env.renderString(template, vars).trim();
+    public static render(template: string, vars: Record<string, unknown>): string {
+        this.initEnv();
+        return this.env!.renderString(template, vars).trim();
     }
 
     /**
@@ -40,10 +47,8 @@ export class TemplateService {
      * @param templateName - The template file name
      * @param vars - Variables to substitute
      */
-    renderFile(templateName: string, vars: Record<string, unknown>): string {
-        return this.env.render(templateName, vars).trim();
+    public static renderFile(templateName: string, vars: Record<string, unknown>): string {
+        this.initEnv();
+        return this.env!.render(templateName, vars).trim();
     }
 }
-
-// Export singleton instance for convenience
-export const templateService = new TemplateService();

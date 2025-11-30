@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { OsuApiService } from "./OsuApiService";
-import { templateService } from "./TemplateService";
+import { TemplateService } from "./TemplateService";
 import { logWarning } from "../utils/logger";
 import { escapeMarkdown, joinList, pushUnique } from "../utils/index";
 import type { Nomination, GameModeExtraInfo, User } from "../models/types";
@@ -72,7 +72,7 @@ export class MessagesService {
             .sort((a, b) => a.name.localeCompare(b.name));
 
         // Send to host
-        const hostMessage = templateService.render(hostTemplate, {
+        const hostMessage = TemplateService.render(hostTemplate, {
             ARTIST: escapeMarkdown(beatmapset.original_artist || beatmapset.artist),
             BEATMAPSET_ID: beatmapset.id,
             EXCLUDED_DIFFS: excludedVersions.length > 0 ? escapeMarkdown(joinList(excludedVersions)) : null,
@@ -116,7 +116,7 @@ export class MessagesService {
         });
 
         if (guestCreatorsToMessage.length > 0) {
-            const guestMessage = templateService.render(guestTemplate, {
+            const guestMessage = TemplateService.render(guestTemplate, {
                 ARTIST: escapeMarkdown(beatmapset.original_artist || beatmapset.artist),
                 BEATMAPSET_ID: beatmapset.id,
                 ROUND_NAME: roundName,
