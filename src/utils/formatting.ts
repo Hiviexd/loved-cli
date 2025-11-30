@@ -13,7 +13,7 @@ export function joinList(array: string[]): string {
     if (array.length < 3) {
         return array.join(" and ");
     }
-    return array.slice(0, -1).join(", ") + ", and " + array.at(-1);
+    return array.slice(0, -1).join(", ") + ", and " + array[array.length - 1];
 }
 
 /**
