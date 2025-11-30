@@ -16,21 +16,20 @@ const SCALES = [1, 2] as const;
  * Service for creating voting banners with canvas and sharp
  */
 export class BannerService {
-    private cache: Set<string> = new Set();
-    private cacheLoaded = false;
-    private overlayImages: Record<number, Image> = {};
-    private resourcesPath: string = "resources";
-    private cachePath: string = "banners/banner-cache";
-    private backgroundsPath: string = "backgrounds";
+    private static readonly RESOURCES_PATH = "resources";
+    private static readonly CACHE_PATH = "banners/banner-cache";
+    private static readonly BACKGROUNDS_PATH = "backgrounds";
 
-    constructor() {}
+    private static cache: Set<string> = new Set();
+    private static cacheLoaded = false;
+    private static overlayImages: Record<number, Image> = {};
 
     /**
      * Initializes the font for banner text
      */
-    private initFont(): void {
+    private static initFont(): void {
         try {
-            registerFont(join(this.resourcesPath, "Torus-Regular.otf"), { family: "Torus" });
+            registerFont(join(this.RESOURCES_PATH, "Torus-Regular.otf"), { family: "Torus" });
         } catch {
             // Font may already be registered
         }
@@ -39,11 +38,11 @@ export class BannerService {
     /**
      * Loads the banner cache from disk
      */
-    private async loadCache(): Promise<void> {
+    private static async loadCache(): Promise<void> {
         if (this.cacheLoaded) return;
 
         try {
-            const contents = await readFile(this.cachePath, "utf8");
+            const contents = await readFile(this.CACHE_PATH, "utf8");
             this.cache = new Set(contents.split("\n").filter(Boolean));
         } catch {
             this.cache = new Set();
@@ -54,17 +53,17 @@ export class BannerService {
     /**
      * Saves the banner cache to disk
      */
-    private async saveCache(): Promise<void> {
-        await writeFile(this.cachePath, [...this.cache.values()].join("\n"));
+    private static async saveCache(): Promise<void> {
+        await writeFile(this.CACHE_PATH, [...this.cache.values()].join("\n"));
     }
 
     /**
      * Loads an overlay image at the specified scale
      */
-    private async loadOverlayImage(scale: number): Promise<Image> {
+    private static async loadOverlayImage(scale: number): Promise<Image> {
         if (!this.overlayImages[scale]) {
             const filename = `voting-overlay${scale > 1 ? `@${scale}x` : ""}.png`;
-            this.overlayImages[scale] = await loadImage(join(this.resourcesPath, filename));
+            this.overlayImages[scale] = await loadImage(join(this.RESOURCES_PATH, filename));
         }
         return this.overlayImages[scale];
     }
@@ -77,9 +76,13 @@ export class BannerService {
      * @param title - Title text to render on the banner
      * @returns true if banners were created, false if using cached
      */
-    async createBanner(backgroundPath: string | null, outputPath: string, title: string): Promise<boolean> {
+    public static async createBanner(
+        backgroundPath: string | null,
+        outputPath: string,
+        title: string
+    ): Promise<boolean> {
         if (!backgroundPath) {
-            backgroundPath = join(this.resourcesPath, "voting-default-background.jpg");
+            backgroundPath = join(this.RESOURCES_PATH, "voting-default-background.jpg");
         }
 
         if (!outputPath) {
@@ -189,14 +192,14 @@ export class BannerService {
     /**
      * Gets the default background path
      */
-    getDefaultBackgroundPath(): string {
-        return join(this.resourcesPath, "voting-default-background.jpg");
+    public static getDefaultBackgroundPath(): string {
+        return join(this.RESOURCES_PATH, "voting-default-background.jpg");
     }
 
     /**
      * Gets the backgrounds directory path for a specific round
      */
-    getBackgroundsDir(roundId: number): string {
-        return join(this.backgroundsPath, roundId.toString());
+    public static getBackgroundsDir(roundId: number): string {
+        return join(this.BACKGROUNDS_PATH, roundId.toString());
     }
 }

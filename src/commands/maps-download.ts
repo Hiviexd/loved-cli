@@ -29,7 +29,7 @@ export const mapsDownloadCommand = new Command("download")
         const cacheKey = Math.floor(Date.now() / 1000);
 
         // Create the backgrounds directory for this round
-        const backgroundDir = new BannerService().getBackgroundsDir(roundId);
+        const backgroundDir = BannerService.getBackgroundsDir(roundId);
         await mkdir(backgroundDir, { recursive: true });
 
         logInfo(`Downloading backgrounds to ${backgroundDir}`);

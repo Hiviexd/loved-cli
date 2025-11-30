@@ -112,7 +112,7 @@ export class NewsService {
         roundId: number,
         beatmapsets: Beatmapset[]
     ): Promise<Record<number, string>> {
-        const backgroundDir = new BannerService().getBackgroundsDir(roundId);
+        const backgroundDir = BannerService.getBackgroundsDir(roundId);
         const paths: Record<number, string> = {};
 
         try {
@@ -164,16 +164,13 @@ export class NewsService {
 
         await mkdir(bannersPath, { recursive: true });
 
-        const bannerService = new BannerService();
-
         await Promise.all(
             beatmapsets.map((beatmapset) =>
-                bannerService
-                    .createBanner(
-                        beatmapset.bgPath ?? null,
-                        join(bannersPath, beatmapset.id.toString()),
-                        bannerTitleOverrides[beatmapset.id] ?? beatmapset.title
-                    )
+                BannerService.createBanner(
+                    beatmapset.bgPath ?? null,
+                    join(bannersPath, beatmapset.id.toString()),
+                    bannerTitleOverrides[beatmapset.id] ?? beatmapset.title
+                )
                     .then((generatedBanners) =>
                         logSuccess(
                             `${generatedBanners ? "Created" : "Using cached"} banners for ${chalk.underline(
