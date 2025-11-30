@@ -20,7 +20,7 @@ export class BannerService {
     private cacheLoaded = false;
     private overlayImages: Record<number, Image> = {};
 
-    constructor(private resourcesPath: string = "resources", private cachePath: string = "config/banner-cache") {}
+    constructor(private resourcesPath: string = "resources", private cachePath: string = "banners/banner-cache") {}
 
     /**
      * Initializes the font for banner text

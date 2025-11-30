@@ -2,6 +2,7 @@ node_modules/*
 dist/
 config/config.json
 config/banner-cache
+banners/banner-cache
 *.log
 .DS_Store
 banners/*
