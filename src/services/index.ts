@@ -4,3 +4,4 @@ export { BannerService } from "./BannerService";
 export { DiscordService, DISCORD_LIMITS } from "./DiscordService";
 export { TemplateService, templateService } from "./TemplateService";
 export { NewsService } from "./NewsService";
+export { MessagesService } from "./MessagesService";
