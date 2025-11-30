@@ -4,8 +4,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createCanvas, loadImage, registerFont, type Image } from "canvas";
 import sharp from "sharp";
-import { logWarning } from "../utils/logger.js";
-import { formatPercent } from "../utils/formatting.js";
+import { logWarning } from "../utils/logger";
+import { formatPercent } from "../utils/formatting";
 
 // Canvas dimensions
 const UNSCALED_WIDTH = 670;

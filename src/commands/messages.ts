@@ -1,14 +1,14 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import * as readline from "node:readline";
-import { loadConfig } from "../config.js";
-import { OsuApiService } from "../services/OsuApiService.js";
-import { LovedWebService } from "../services/LovedWebService.js";
-import { templateService } from "../services/TemplateService.js";
-import { logAndExit, logWarning, logInfo } from "../utils/logger.js";
-import { escapeMarkdown, joinList, pushUnique } from "../utils/index.js";
-import { tryUpdate } from "../utils/git-update.js";
-import type { Nomination, GameModeExtraInfo, User } from "../models/types.js";
+import { loadConfig } from "../config";
+import { OsuApiService } from "../services/OsuApiService";
+import { LovedWebService } from "../services/LovedWebService";
+import { templateService } from "../services/TemplateService";
+import { logAndExit, logWarning, logInfo } from "../utils/logger";
+import { escapeMarkdown, joinList, pushUnique } from "../utils/index";
+import { tryUpdate } from "../utils/git-update";
+import type { Nomination, GameModeExtraInfo, User } from "../models/types";
 
 /**
  * Prompts the user for input with an optional default value

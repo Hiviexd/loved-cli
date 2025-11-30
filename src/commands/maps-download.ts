@@ -3,10 +3,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import axios from "axios";
 import chalk from "chalk";
-import { loadConfig } from "../config.js";
-import { LovedWebService } from "../services/LovedWebService.js";
-import { logAndExit, logWarning, logSuccess, logInfo } from "../utils/logger.js";
-import { tryUpdate } from "../utils/git-update.js";
+import { loadConfig } from "../config";
+import { LovedWebService } from "../services/LovedWebService";
+import { logAndExit, logWarning, logSuccess, logInfo } from "../utils/logger";
+import { tryUpdate } from "../utils/git-update";
 
 /**
  * Base directory for storing background images

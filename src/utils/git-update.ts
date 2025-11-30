@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { platform } from "node:process";
-import { logInfo, logSuccess, logWarning } from "./logger.js";
+import { logInfo, logSuccess, logWarning } from "./logger";
 
 const updateCachePath = "config/update-cache";
 

@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from "axios";
 import chalk from "chalk";
-import { RateLimiter } from "../utils/rate-limiter.js";
-import { NoTraceError, logInfo, logSuccess } from "../utils/logger.js";
-import type { TokenCache } from "../models/types.js";
+import { RateLimiter } from "../utils/rate-limiter";
+import { NoTraceError, logInfo, logSuccess } from "../utils/logger";
+import type { TokenCache } from "../models/types";
 
 /**
  * Pin type for forum topics

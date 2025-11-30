@@ -1,6 +1,6 @@
 // Config types are now defined in src/config.ts via zod schema
 // Re-export them for convenience
-export type { Config, Messages, LoadedConfig } from "../config.js";
+export type { Config, Messages, LoadedConfig } from "../config";
 
 /**
  * User information from the osu! API

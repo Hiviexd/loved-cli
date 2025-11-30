@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import Ruleset from "../models/Ruleset.js";
-import type { RoundInfo, Nomination, GameModeExtraInfo, User } from "../models/types.js";
-import { NoTraceError, logInfo, logWarning } from "../utils/logger.js";
+import Ruleset from "../models/Ruleset";
+import type { RoundInfo, Nomination, GameModeExtraInfo, User } from "../models/types";
+import { NoTraceError, logInfo, logWarning } from "../utils/logger";
 
 const INTEROP_VERSION = "8";
 

@@ -6,3 +6,4 @@ config/banner-cache
 .DS_Store
 banners/*
 !banners/.gitkeep
+.cursor/rules

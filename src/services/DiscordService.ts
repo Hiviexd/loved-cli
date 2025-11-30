@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { DiscordEmbed } from "../models/types.js";
+import type { DiscordEmbed } from "../models/types";
 
 /**
  * Discord message limits

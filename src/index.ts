@@ -4,7 +4,7 @@
 process.env.FORCE_COLOR = "2";
 
 import { Command } from "commander";
-import { setupCommand, mapsCommand, messagesCommand, newsCommand, resultsCommand } from "./commands/index.js";
+import { setupCommand, mapsCommand, messagesCommand, newsCommand, resultsCommand } from "./commands/index";
 
 const program = new Command();
 

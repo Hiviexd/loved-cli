@@ -1,5 +1,5 @@
-export { setupCommand } from "./setup.js";
-export { mapsCommand } from "./maps.js";
-export { messagesCommand } from "./messages.js";
-export { newsCommand } from "./news.js";
-export { resultsCommand } from "./results.js";
+export { setupCommand } from "./setup";
+export { mapsCommand } from "./maps";
+export { messagesCommand } from "./messages";
+export { newsCommand } from "./news";
+export { resultsCommand } from "./results";

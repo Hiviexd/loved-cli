@@ -2,7 +2,6 @@
     "name": "project-loved",
     "version": "2.0.0",
     "description": "Project Loved management CLI",
-    "type": "module",
     "main": "dist/index.js",
     "bin": {
         "loved": "dist/index.js"

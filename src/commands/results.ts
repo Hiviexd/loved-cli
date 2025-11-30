@@ -1,14 +1,14 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { loadConfig } from "../config.js";
-import { OsuApiService } from "../services/OsuApiService.js";
-import { LovedWebService } from "../services/LovedWebService.js";
-import { DiscordService } from "../services/DiscordService.js";
-import Ruleset from "../models/Ruleset.js";
-import type { DiscordEmbed } from "../models/types.js";
-import { logAndExit, logInfo, logWarning } from "../utils/logger.js";
-import { escapeMarkdown, formatPercent, joinList } from "../utils/index.js";
-import { tryUpdate } from "../utils/git-update.js";
+import { loadConfig } from "../config";
+import { OsuApiService } from "../services/OsuApiService";
+import { LovedWebService } from "../services/LovedWebService";
+import { DiscordService } from "../services/DiscordService";
+import Ruleset from "../models/Ruleset";
+import type { DiscordEmbed } from "../models/types";
+import { logAndExit, logInfo, logWarning } from "../utils/logger";
+import { escapeMarkdown, formatPercent, joinList } from "../utils/index";
+import { tryUpdate } from "../utils/git-update";
 
 export const resultsCommand = new Command("results")
     .description("Process voting results")

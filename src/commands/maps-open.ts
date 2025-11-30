@@ -1,9 +1,9 @@
 import { Command } from "commander";
 import open from "open";
-import { loadConfig } from "../config.js";
-import { LovedWebService } from "../services/LovedWebService.js";
-import { logAndExit, logInfo } from "../utils/logger.js";
-import { tryUpdate } from "../utils/git-update.js";
+import { loadConfig } from "../config";
+import { LovedWebService } from "../services/LovedWebService";
+import { logAndExit, logInfo } from "../utils/logger";
+import { tryUpdate } from "../utils/git-update";
 
 export const mapsOpenCommand = new Command("open")
     .description("Open all nominated beatmapsets in the browser")

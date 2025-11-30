@@ -1,6 +1,6 @@
-export { OsuApiService, type PinType } from './OsuApiService.js';
-export { LovedWebService } from './LovedWebService.js';
-export { BannerService } from './BannerService.js';
-export { DiscordService, DISCORD_LIMITS } from './DiscordService.js';
-export { TemplateService, templateService } from './TemplateService.js';
-
+export { OsuApiService, type PinType } from "./OsuApiService";
+export { LovedWebService } from "./LovedWebService";
+export { BannerService } from "./BannerService";
+export { DiscordService, DISCORD_LIMITS } from "./DiscordService";
+export { TemplateService, templateService } from "./TemplateService";
+export { NewsService } from "./NewsService";
