@@ -19,8 +19,11 @@ export class BannerService {
     private cache: Set<string> = new Set();
     private cacheLoaded = false;
     private overlayImages: Record<number, Image> = {};
+    private resourcesPath: string = "resources";
+    private cachePath: string = "banners/banner-cache";
+    private backgroundsPath: string = "backgrounds";
 
-    constructor(private resourcesPath: string = "resources", private cachePath: string = "banners/banner-cache") {}
+    constructor() {}
 
     /**
      * Initializes the font for banner text
@@ -188,5 +191,12 @@ export class BannerService {
      */
     getDefaultBackgroundPath(): string {
         return join(this.resourcesPath, "voting-default-background.jpg");
+    }
+
+    /**
+     * Gets the backgrounds directory path for a specific round
+     */
+    getBackgroundsDir(roundId: number): string {
+        return join(this.backgroundsPath, roundId.toString());
     }
 }

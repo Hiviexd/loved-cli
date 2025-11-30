@@ -7,18 +7,7 @@ import { loadConfig } from "../config";
 import { LovedWebService } from "../services/LovedWebService";
 import { logAndExit, logWarning, logSuccess, logInfo } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
-
-/**
- * Base directory for storing background images
- */
-const BANNERS_DIR = "banners";
-
-/**
- * Gets the background directory path for a specific round
- */
-export function getBackgroundDir(roundId: number): string {
-    return join(BANNERS_DIR, roundId.toString());
-}
+import { BannerService } from "../services/BannerService";
 
 export const mapsDownloadCommand = new Command("download")
     .description("Download beatmapset background images from osu!")
@@ -40,10 +29,10 @@ export const mapsDownloadCommand = new Command("download")
         const cacheKey = Math.floor(Date.now() / 1000);
 
         // Create the backgrounds directory for this round
-        const backgroundDir = getBackgroundDir(roundId);
+        const backgroundDir = new BannerService().getBackgroundsDir(roundId);
         await mkdir(backgroundDir, { recursive: true });
 
-        logInfo(`Downloading backgrounds to ${backgroundDir}/`);
+        logInfo(`Downloading backgrounds to ${backgroundDir}`);
         console.log(chalk.dim(`Downloading backgrounds for ${beatmapsetIdSet.size} beatmapsets...`));
 
         const downloadPromises = [...beatmapsetIdSet].map(async (beatmapsetId) => {
@@ -64,5 +53,5 @@ export const mapsDownloadCommand = new Command("download")
         });
 
         await Promise.all(downloadPromises);
-        console.log(chalk.green(`Done downloading backgrounds to ${backgroundDir}/`));
+        console.log(chalk.green(`Done downloading backgrounds to ${backgroundDir}`));
     });

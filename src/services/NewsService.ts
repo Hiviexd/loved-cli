@@ -5,7 +5,6 @@ import { OsuApiService } from "./OsuApiService";
 import { LovedWebService } from "./LovedWebService";
 import { BannerService } from "./BannerService";
 import { templateService } from "./TemplateService";
-import { getBackgroundDir } from "../commands/maps-download";
 import Ruleset from "../models/Ruleset";
 import type { Nomination, RoundInfo, Beatmapset, Beatmap } from "../models/types";
 import { logInfo, logSuccess, logWarning, log, NoTraceError } from "../utils/logger";
@@ -113,7 +112,7 @@ export class NewsService {
         roundId: number,
         beatmapsets: Beatmapset[]
     ): Promise<Record<number, string>> {
-        const backgroundDir = getBackgroundDir(roundId);
+        const backgroundDir = new BannerService().getBackgroundsDir(roundId);
         const paths: Record<number, string> = {};
 
         try {
