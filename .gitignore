@@ -8,3 +8,5 @@ backgrounds/banner-cache
 backgrounds/*
 !backgrounds/.gitkeep
 .cursor/rules
+build/
+project-loved-*.zip

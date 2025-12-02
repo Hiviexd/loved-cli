@@ -16,6 +16,7 @@ export const DISCORD_LIMITS = {
  * TODO: Implement actual Discord webhook integration
  */
 export class DiscordService {
+    // @ts-expect-error - Discord webhook is not used in this dummy implementation
     constructor(private webhook: string) {}
 
     /**

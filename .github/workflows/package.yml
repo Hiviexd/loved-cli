@@ -1,0 +1,56 @@
+name: Package
+
+on:
+    workflow_dispatch:
+    push:
+        tags:
+            - "v*"
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    package:
+        strategy:
+            matrix:
+                os: [windows-latest, ubuntu-latest, macos-latest]
+                include:
+                    - os: windows-latest
+                      platform: windows
+                      archive-name: project-loved-windows.zip
+                    - os: ubuntu-latest
+                      platform: linux
+                      archive-name: project-loved-linux.zip
+                    - os: macos-latest
+                      platform: macos
+                      archive-name: project-loved-macos.zip
+
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "pnpm"
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 8
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build and package
+              run: pnpm package:${{ matrix.platform }}
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ matrix.archive-name }}
+                  path: ${{ matrix.archive-name }}
+                  retention-days: 30
