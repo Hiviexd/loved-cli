@@ -1,6 +1,8 @@
 {
     "lovedWebApiKey": "",
     "lovedWebBaseUrl": "https://loved.sh",
+    "lovedAdminApiKey": "",
+    "lovedAdminBaseUrl": "",
     "lovedRoundId": 0,
     "osuBaseUrl": "https://osu.ppy.sh",
     "osuWikiPath": "",
