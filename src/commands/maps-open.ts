@@ -27,5 +27,6 @@ export const mapsOpenCommand = new Command("open")
 
         for (const beatmapsetId of beatmapsetIdSet) {
             await open(`https://osu.ppy.sh/beatmapsets/${beatmapsetId}`);
+            // TODO add delay
         }
     });
