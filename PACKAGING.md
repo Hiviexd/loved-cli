@@ -4,15 +4,15 @@ This document explains how to build and test platform-specific packages for Proj
 
 ## Overview
 
-The packaging system creates distributable archives for Windows, Linux, and macOS. Each archive contains:
-- `dist/` - Compiled TypeScript output
+The packaging system creates distributable archives for Windows, Linux, and macOS using **tsup** to bundle all JavaScript code into a single file. Each archive contains:
+- `dist/index.js` - **Bundled CLI** (all JavaScript dependencies bundled, except native modules)
 - `resources/` - Template files and assets
 - `config/` - Configuration example file
-- `package.json` - Project metadata
-- `node_modules/` - Production dependencies (platform-specific, ready to use)
+- `package.json` - Minimal package.json (only native dependencies)
+- `node_modules/` - **Only native dependencies** (`sharp`, `canvas`, and their transitive deps)
 - Platform-specific launcher script (`loved.cmd` for Windows, `loved` for Unix)
 
-**Packages are ready to run out of the box** - no installation required! Dependencies are pre-installed with platform-specific native modules.
+**Packages are ready to run out of the box** - no installation required! All JavaScript code is bundled, and only platform-specific native modules are included.
 
 ## Prerequisites
 
@@ -77,11 +77,12 @@ Since you're on Windows, you can test the Windows package directly. For Linux/ma
    ```
    test-package/
    ├── dist/
+   │   └── index.js      (bundled CLI - all JS code in one file!)
    ├── resources/
    ├── config/
    │   └── config.example.json
-   ├── node_modules/     (pre-installed, ready to use!)
-   ├── package.json
+   ├── node_modules/     (only native deps: sharp, canvas)
+   ├── package.json      (minimal - only native deps)
    └── loved.cmd
    ```
 
@@ -129,10 +130,26 @@ The packaging workflow runs automatically on:
 
 Artifacts are uploaded and available for 30 days. Download them from the Actions tab in GitHub.
 
+## How Bundling Works
+
+The CLI uses **tsup** to bundle all JavaScript code into a single `dist/index.js` file:
+
+- ✅ **Bundled**: All TypeScript source code and JavaScript dependencies (axios, chalk, commander, nunjucks, open, zod, etc.)
+- ❌ **External**: Native modules (`sharp`, `canvas`) are excluded from bundling and installed separately
+- 🎯 **Format**: CommonJS (cjs) for maximum Node.js compatibility
+- 📦 **Target**: Node.js 18+
+
+This approach:
+- Eliminates pnpm `.pnpm` folder layout issues
+- Avoids ESM/CommonJS compatibility problems
+- Reduces package size (only native deps in node_modules)
+- Ensures consistent behavior across platforms
+
 ## Troubleshooting
 
-### "dist/ directory not found"
+### "dist/index.js not found"
 - Run `pnpm build` first, or the packaging script will run it automatically
+- Ensure tsup is installed: `pnpm install`
 
 ### Native dependencies don't work
 - Ensure you're using the correct platform-specific package (native modules are platform-specific)
@@ -151,15 +168,15 @@ Artifacts are uploaded and available for 30 days. Download them from the Actions
 
 Each package includes everything needed to run the CLI:
 
-- ✅ `dist/` - Compiled JavaScript (required)
+- ✅ `dist/index.js` - **Bundled CLI** (single file with all JavaScript code bundled)
 - ✅ `resources/` - Templates and assets (required)
 - ✅ `config/config.example.json` - Example configuration (required)
-- ✅ `package.json` - Metadata and dependencies (required)
-- ✅ `node_modules/` - Production dependencies with platform-specific native modules (pre-installed)
+- ✅ `package.json` - Minimal package.json (only lists native dependencies)
+- ✅ `node_modules/` - **Only native dependencies** (`sharp`, `canvas`, and their transitive dependencies)
 - ✅ Platform launcher - Entry point script (required)
-- ❌ `src/` - Source files (not included)
+- ❌ `src/` - Source files (not included - all bundled)
 - ❌ `tsconfig.json` - Build config (not needed at runtime)
 - ❌ `.git/` - Git metadata (not included)
 
-**No installation required!** Just extract and run. Dependencies are pre-installed with the correct platform-specific native modules (`sharp`, `canvas`, etc.).
+**No installation required!** Just extract and run. All JavaScript dependencies are bundled into `dist/index.js`, and only platform-specific native modules are included in `node_modules/`.
 

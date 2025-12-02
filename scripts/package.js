@@ -4,14 +4,15 @@
  * Multi-platform packaging script for Project Loved CLI
  *
  * Creates platform-specific distributable archives containing:
- * - dist/ (compiled TypeScript)
+ * - dist/index.js (bundled CLI - all code bundled except native modules)
  * - resources/
  * - config/ (with example config)
- * - package.json
- * - node_modules/ (production dependencies, platform-specific)
+ * - package.json (minimal - only native dependencies)
+ * - node_modules/ (only native dependencies: sharp, canvas, and their deps)
  * - Platform-specific launcher script
  *
  * Packages are ready to run out of the box - no installation required!
+ * All JavaScript dependencies are bundled, only native modules are external.
  */
 
 const { execSync } = require("child_process");
@@ -113,12 +114,18 @@ async function packagePlatform(platform) {
     }
     fs.mkdirSync(buildDir, { recursive: true });
 
-    // Copy dist/
-    console.log("  Copying dist/...");
-    if (!fs.existsSync(join(rootDir, "dist"))) {
-        throw new Error("dist/ directory not found. Run 'pnpm build' first.");
+    // Copy bundled dist/index.js (and sourcemap if present)
+    console.log("  Copying bundled dist/...");
+    if (!fs.existsSync(join(rootDir, "dist", "index.js"))) {
+        throw new Error("dist/index.js not found. Run 'pnpm build' first.");
     }
-    copyDir(join(rootDir, "dist"), join(buildDir, "dist"));
+    fs.mkdirSync(join(buildDir, "dist"), { recursive: true });
+    fs.copyFileSync(join(rootDir, "dist", "index.js"), join(buildDir, "dist", "index.js"));
+
+    // Copy sourcemap if it exists
+    if (fs.existsSync(join(rootDir, "dist", "index.js.map"))) {
+        fs.copyFileSync(join(rootDir, "dist", "index.js.map"), join(buildDir, "dist", "index.js.map"));
+    }
 
     // Copy resources/
     console.log("  Copying resources/...");
@@ -134,27 +141,40 @@ async function packagePlatform(platform) {
         );
     }
 
-    // Copy package.json
-    console.log("  Copying package.json...");
-    fs.copyFileSync(join(rootDir, "package.json"), join(buildDir, "package.json"));
+    // Create minimal package.json with only native dependencies
+    console.log("  Creating minimal package.json...");
+    const rootPackageJson = JSON.parse(fs.readFileSync(join(rootDir, "package.json"), "utf8"));
+    const minimalPackageJson = {
+        name: rootPackageJson.name,
+        version: rootPackageJson.version,
+        description: rootPackageJson.description,
+        main: "dist/index.js",
+        bin: {
+            loved: "dist/index.js",
+        },
+        engines: rootPackageJson.engines,
+        dependencies: {
+            // Only include native dependencies that are excluded from bundling
+            sharp: rootPackageJson.dependencies.sharp,
+            canvas: rootPackageJson.dependencies.canvas,
+        },
+        // Note: We use npm for installation, so pnpm config is not needed
+    };
+    fs.writeFileSync(join(buildDir, "package.json"), JSON.stringify(minimalPackageJson, null, 2) + "\n");
 
-    // Copy pnpm-lock.yaml for consistent dependency installation
-    if (fs.existsSync(join(rootDir, "pnpm-lock.yaml"))) {
-        console.log("  Copying pnpm-lock.yaml...");
-        fs.copyFileSync(join(rootDir, "pnpm-lock.yaml"), join(buildDir, "pnpm-lock.yaml"));
-    }
-
-    // Install production dependencies (includes platform-specific native modules)
-    console.log("  Installing production dependencies...");
+    // Install only native dependencies (sharp, canvas) and their transitive deps
+    // Use npm instead of pnpm to avoid .pnpm symlink issues in packaged distributions
+    // npm creates a flat node_modules structure that works reliably when extracted
+    console.log("  Installing native dependencies (sharp, canvas)...");
     try {
-        execSync("pnpm install --prod --frozen-lockfile", {
+        execSync("npm install --production", {
             cwd: buildDir,
             stdio: "inherit",
             env: { ...process.env, CI: "true" }, // Set CI to avoid interactive prompts
         });
-        console.log("  ✓ Dependencies installed");
+        console.log("  ✓ Native dependencies installed");
     } catch (error) {
-        throw new Error(`Failed to install dependencies: ${error.message}`);
+        throw new Error(`Failed to install native dependencies: ${error.message}`);
     }
 
     // Create launcher script
@@ -187,13 +207,13 @@ async function main() {
 
     const rootDir = resolve(__dirname, "..");
 
-    // Step 1: Build TypeScript
-    console.log("📝 Building TypeScript...");
+    // Step 1: Build and bundle with tsup
+    console.log("📦 Bundling with tsup...");
     try {
         execSync("pnpm build", { cwd: rootDir, stdio: "inherit" });
-        console.log("✓ TypeScript build completed\n");
+        console.log("✓ Bundle completed\n");
     } catch (error) {
-        console.error("✗ TypeScript build failed");
+        console.error("✗ Bundle failed");
         process.exit(1);
     }
 
