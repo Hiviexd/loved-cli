@@ -1,37 +1,20 @@
-import axios, { AxiosInstance, AxiosError } from "axios";
 import Ruleset from "../models/Ruleset";
 import type { RoundInfo, Nomination, GameModeExtraInfo, User } from "../models/types";
-import { NoTraceError, logInfo, logWarning } from "../utils/logger";
+import { logInfo, logWarning } from "../utils/logger";
+import { BaseApiClient } from "./BaseApiClient";
 
 const INTEROP_VERSION = "8";
 
 /**
  * Client for interacting with the loved.sh API
  */
-export class LovedWebClient {
-    private api: AxiosInstance;
-
+export class LovedWebClient extends BaseApiClient {
     constructor(baseUrl: string, apiKey: string) {
-        this.api = axios.create({
-            baseURL: `${baseUrl}/api/local-interop`,
-            headers: {
-                "X-Loved-InteropKey": apiKey,
-                "X-Loved-InteropVersion": INTEROP_VERSION,
-            },
+        super();
+        this.api = this.createApi(`${baseUrl}/api/local-interop`, {
+            "X-Loved-InteropKey": apiKey,
+            "X-Loved-InteropVersion": INTEROP_VERSION,
         });
-    }
-
-    /**
-     * Handles errors from the loved.sh API
-     */
-    private handleError(error: unknown): never {
-        if (axios.isAxiosError(error)) {
-            const axiosError = error as AxiosError<{ error?: string }>;
-            if (axiosError.response?.data?.error) {
-                throw new NoTraceError(`[loved.sh] ${axiosError.response.data.error}`);
-            }
-        }
-        throw error;
     }
 
     /**
