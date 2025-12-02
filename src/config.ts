@@ -16,10 +16,10 @@ const BotApiClientSchema = z.object({
 const ConfigSchema = z.object({
     botApiClient: BotApiClientSchema,
     bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
-    lovedApiKey: z.string().min(1, "loved.sh API key is required"),
-    lovedBaseUrl: z
+    lovedWebApiKey: z.string().min(1, "loved.sh API key is required"),
+    lovedWebBaseUrl: z
         .string()
-        .url("lovedBaseUrl must be a valid URL")
+        .url("lovedWebBaseUrl must be a valid URL")
         .transform((url) => url.replace(/\/+$/, "")),
     lovedRoundId: z.number().int().positive("lovedRoundId must be a positive integer"),
     osuBaseUrl: z

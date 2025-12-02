@@ -30,7 +30,7 @@ export const resultsCommand = new Command("results")
         const config = await loadConfig();
         const roundId = options.round ?? config.lovedRoundId;
 
-        const lovedWeb = new LovedWebService(config.lovedBaseUrl, config.lovedApiKey);
+        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
         let roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         const osuApi = new OsuApiService(config.osuBaseUrl, config.botApiClient.id, config.botApiClient.secret);

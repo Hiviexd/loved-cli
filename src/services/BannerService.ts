@@ -17,7 +17,7 @@ const SCALES = [1, 2] as const;
  */
 export class BannerService {
     private static readonly RESOURCES_PATH = "resources";
-    private static readonly CACHE_PATH = "banners/banner-cache";
+    private static readonly CACHE_PATH = "backgrounds/banner-cache";
     private static readonly BACKGROUNDS_PATH = "backgrounds";
 
     private static cache: Set<string> = new Set();

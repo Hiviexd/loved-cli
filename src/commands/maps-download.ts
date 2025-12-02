@@ -21,7 +21,7 @@ export const mapsDownloadCommand = new Command("download")
         const config = await loadConfig();
         const roundId = options.round ?? config.lovedRoundId;
 
-        const lovedWeb = new LovedWebService(config.lovedBaseUrl, config.lovedApiKey);
+        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         const beatmapsetIds = roundInfo.nominations.map((n) => n.beatmapset_id);

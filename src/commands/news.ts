@@ -32,7 +32,7 @@ export const newsCommand = new Command("news")
             process.exit(1);
         }
 
-        const lovedWeb = new LovedWebService(config.lovedBaseUrl, config.lovedApiKey);
+        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
         const postTimeIsoString = roundInfo.postTime.toISOString();
 

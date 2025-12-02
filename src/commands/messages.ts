@@ -52,7 +52,7 @@ export const messagesCommand = new Command("messages")
             );
         }
 
-        const lovedWeb = new LovedWebService(config.lovedBaseUrl, config.lovedApiKey);
+        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         if (roundInfo.nominations.length === 0) {

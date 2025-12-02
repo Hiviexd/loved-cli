@@ -37,8 +37,8 @@ The configuration is stored in `config/config.json`. You can also edit this file
 |-------|-------------|----------|
 | `botApiClient.id` | osu! bot API client ID | Yes |
 | `botApiClient.secret` | osu! bot API client secret | Yes |
-| `lovedApiKey` | loved.sh API key | Yes |
-| `lovedBaseUrl` | loved.sh base URL | No (default: `https://loved.sh`) |
+| `lovedWebApiKey` | loved.sh API key | Yes |
+| `lovedWebBaseUrl` | loved.sh base URL | No (default: `https://loved.sh`) |
 | `lovedRoundId` | Current round ID | Yes (set manually each round) |
 | `osuBaseUrl` | osu! base URL | No (default: `https://osu.ppy.sh`) |
 | `osuWikiPath` | Path to osu-wiki repository | Yes (for news generation) |

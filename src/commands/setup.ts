@@ -10,8 +10,8 @@ interface ConfigData {
         secret: string;
     };
     bannerTitleOverrides: Record<string, string>;
-    lovedApiKey: string;
-    lovedBaseUrl: string;
+    lovedWebApiKey: string;
+    lovedWebBaseUrl: string;
     lovedRoundId: number;
     osuBaseUrl: string;
     osuWikiPath: string;
@@ -36,8 +36,8 @@ async function loadExistingConfig(): Promise<ConfigData> {
             secret: "",
         },
         bannerTitleOverrides: {},
-        lovedApiKey: "",
-        lovedBaseUrl: "https://loved.sh",
+        lovedWebApiKey: "",
+        lovedWebBaseUrl: "https://loved.sh",
         lovedRoundId: 0,
         osuBaseUrl: "https://osu.ppy.sh",
         osuWikiPath: "",
@@ -87,8 +87,8 @@ export const setupCommand = new Command("setup")
 
             // loved.sh API
             console.log(chalk.yellow("─── loved.sh API (get these from loved.sh) ───"));
-            const lovedApiKey = await prompt(rl, "loved.sh API Key", existing.lovedApiKey || undefined);
-            const lovedBaseUrl = await prompt(rl, "loved.sh Base URL", existing.lovedBaseUrl);
+            const lovedWebApiKey = await prompt(rl, "loved.sh API Key", existing.lovedWebApiKey || undefined);
+            const lovedWebBaseUrl = await prompt(rl, "loved.sh Base URL", existing.lovedWebBaseUrl);
 
             console.log();
 
@@ -103,8 +103,8 @@ export const setupCommand = new Command("setup")
                     secret: botClientSecret,
                 },
                 bannerTitleOverrides: existing.bannerTitleOverrides,
-                lovedApiKey,
-                lovedBaseUrl,
+                lovedWebApiKey,
+                lovedWebBaseUrl,
                 lovedRoundId: existing.lovedRoundId,
                 osuBaseUrl: existing.osuBaseUrl,
                 osuWikiPath,
@@ -120,7 +120,7 @@ export const setupCommand = new Command("setup")
             const warnings: string[] = [];
             if (!config.botApiClient.id) warnings.push("botApiClient.id");
             if (!config.botApiClient.secret) warnings.push("botApiClient.secret");
-            if (!config.lovedApiKey) warnings.push("lovedApiKey");
+            if (!config.lovedWebApiKey) warnings.push("lovedWebApiKey");
             if (!config.lovedRoundId) warnings.push("lovedRoundId (set manually every round)");
 
             if (warnings.length > 0) {
