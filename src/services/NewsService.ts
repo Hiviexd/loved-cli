@@ -2,7 +2,7 @@ import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import chalk from "chalk";
 import { OsuApiService } from "./OsuApiService";
-import { LovedWebService } from "./LovedWebService";
+import { LovedWebClient } from "../clients/LovedWebClient";
 import { BannerService } from "./BannerService";
 import { TemplateService } from "./TemplateService";
 import Ruleset from "../models/Ruleset";
@@ -195,7 +195,7 @@ export class NewsService {
      * Generates forum topics for the round
      */
     public static async generateTopics(
-        lovedWeb: LovedWebService,
+        lovedWeb: LovedWebClient,
         osuApi: OsuApiService,
         roundInfo: RoundInfo,
         roundId: number,

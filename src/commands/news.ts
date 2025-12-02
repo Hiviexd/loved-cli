@@ -3,7 +3,7 @@ import { join } from "node:path";
 import chalk from "chalk";
 import { loadConfig } from "../config";
 import { OsuApiService } from "../services/OsuApiService";
-import { LovedWebService } from "../services/LovedWebService";
+import { LovedWebClient } from "../clients/LovedWebClient";
 import { NewsService } from "../services/NewsService";
 import { logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
@@ -32,7 +32,7 @@ export const newsCommand = new Command("news")
             process.exit(1);
         }
 
-        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
+        const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
         const postTimeIsoString = roundInfo.postTime.toISOString();
 

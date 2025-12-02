@@ -2,7 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { loadConfig } from "../config";
 import { OsuApiService } from "../services/OsuApiService";
-import { LovedWebService } from "../services/LovedWebService";
+import { LovedWebClient } from "../clients/LovedWebClient";
 import { DiscordService } from "../services/DiscordService";
 import Ruleset from "../models/Ruleset";
 import type { DiscordEmbed } from "../models/types";
@@ -30,7 +30,7 @@ export const resultsCommand = new Command("results")
         const config = await loadConfig();
         const roundId = options.round ?? config.lovedRoundId;
 
-        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
+        const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         let roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         const osuApi = new OsuApiService(config.osuBaseUrl, config.botApiClient.id, config.botApiClient.secret);
@@ -227,7 +227,7 @@ export const resultsCommand = new Command("results")
  * Posts results to Discord webhooks
  */
 async function postDiscordResults(
-    roundInfo: Awaited<ReturnType<LovedWebService["getRoundInfo"]>>,
+    roundInfo: Awaited<ReturnType<LovedWebClient["getRoundInfo"]>>,
     gameModesPresent: Ruleset[],
     config: Awaited<ReturnType<typeof loadConfig>>,
     dryRun: boolean

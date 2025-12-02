@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import open from "open";
 import { loadConfig } from "../config";
-import { LovedWebService } from "../services/LovedWebService";
+import { LovedWebClient } from "../clients/LovedWebClient";
 import { logAndExit, logInfo } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 
@@ -17,7 +17,7 @@ export const mapsOpenCommand = new Command("open")
         const config = await loadConfig();
         const roundId = options.round ?? config.lovedRoundId;
 
-        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
+        const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         const beatmapsetIds = roundInfo.nominations.map((n) => n.beatmapset_id);

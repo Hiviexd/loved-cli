@@ -6,9 +6,9 @@ import { NoTraceError, logInfo, logWarning } from "../utils/logger";
 const INTEROP_VERSION = "8";
 
 /**
- * Service for interacting with the loved.sh API
+ * Client for interacting with the loved.sh API
  */
-export class LovedWebService {
+export class LovedWebClient {
     private api: AxiosInstance;
 
     constructor(baseUrl: string, apiKey: string) {
@@ -199,3 +199,4 @@ export class LovedWebService {
         }
     }
 }
+

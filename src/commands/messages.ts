@@ -3,7 +3,7 @@ import chalk from "chalk";
 import * as readline from "node:readline";
 import { loadConfig } from "../config";
 import { OsuApiService } from "../services/OsuApiService";
-import { LovedWebService } from "../services/LovedWebService";
+import { LovedWebClient } from "../clients/LovedWebClient";
 import { MessagesService } from "../services/MessagesService";
 import { TemplateService } from "../services/TemplateService";
 import { logAndExit, logInfo } from "../utils/logger";
@@ -52,7 +52,7 @@ export const messagesCommand = new Command("messages")
             );
         }
 
-        const lovedWeb = new LovedWebService(config.lovedWebBaseUrl, config.lovedWebApiKey);
+        const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         if (roundInfo.nominations.length === 0) {
