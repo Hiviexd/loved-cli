@@ -2,12 +2,11 @@ import { Command } from "commander";
 import chalk from "chalk";
 import * as readline from "node:readline";
 import { loadConfig } from "../config";
-import { OsuApiService } from "../services/OsuApiService";
 import { LovedWebClient } from "../clients/LovedWebClient";
-import { MessagesService } from "../services/MessagesService";
-import { TemplateService } from "../services/TemplateService";
 import { Logger,logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
+import { LovedAdminClient } from "../clients/LovedAdminClient";
+import { exportDryRun } from "../utils/dry-runs";
 
 const log = new Logger("messages");
 
@@ -58,40 +57,17 @@ export const messagesCommand = new Command("messages")
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         if (roundInfo.nominations.length === 0) {
-            log.info("No nominations found for this round");
+            log.info(`No nominations found for round ${roundId}!`);
             return;
         }
 
-        // Load templates
-        const hostTemplate = await TemplateService.loadTemplate("chat-nomination-template.md");
-        const guestTemplate = await TemplateService.loadTemplate("chat-nomination-guest-template.md");
-
-        const osuApi = new OsuApiService(config.osuBaseUrl, config.botApiClient.id, config.botApiClient.secret);
-
-        log.info(`Sending messages for ${roundInfo.nominations.length} nominations...`);
-
-        for (const nomination of roundInfo.nominations) {
-            const relatedNominations = roundInfo.allNominations.filter(
-                (n) => n.beatmapset_id === nomination.beatmapset_id
-            );
-
-            await MessagesService.sendNotifyPm({
-                osuApi,
-                nominations: relatedNominations,
-                extraGameModeInfo: roundInfo.extraGameModeInfo,
-                roundName: roundInfo.name,
-                hostTemplate,
-                guestTemplate,
-                pollStartGuess,
-                newsAuthorName: roundInfo.newsAuthorName,
-                newsAuthorId: roundInfo.newsAuthorId,
-                dryRun: options.dryRun,
-            }).catch(logAndExit);
-        }
+        const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
+        const messageResponse = await lovedAdmin.sendMessages(roundId, pollStartGuess, options.dryRun).catch(logAndExit);
 
         if (options.dryRun) {
-            log.warning("DRY RUN: No messages were actually sent");
+            log.warning("DRY RUN: No messages were actually sent!");
+            exportDryRun("message", messageResponse);
         } else {
-            log.success("Done sending messages");
+            log.success("Done sending messages!");
         }
     });
