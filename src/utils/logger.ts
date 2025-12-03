@@ -42,14 +42,7 @@ export function logAndExit(error: unknown): never {
 
 // ? Color config
 
-const fillColors = {
-    success: chalk.bgGreen.black,
-    info: chalk.bgBlue.black,
-    warning: chalk.bgYellow.black,
-    error: chalk.bgRed.black,
-};
-
-const lightColors = {
+const textColors = {
     success: chalk.green,
     info: chalk.blue,
     warning: chalk.yellow,
@@ -65,7 +58,7 @@ export class Logger {
     private dimNext = false;
 
     constructor(moduleName: string) {
-        this.moduleTag = chalk.bgCyanBright.black(` ${moduleName} `);
+        this.moduleTag = chalk.cyanBright(`[${moduleName}]`);
     }
 
     /**
@@ -80,25 +73,23 @@ export class Logger {
     // format HH:MM:SS
     private time() {
         const d = new Date();
-        return chalk.bgBlackBright.white(
-            ` ${d.getHours().toString().padStart(2, "0")}:` +
+        return chalk.gray(
+            `${d.getHours().toString().padStart(2, "0")}:` +
                 `${d.getMinutes().toString().padStart(2, "0")}:` +
-                `${d.getSeconds().toString().padStart(2, "0")} `
+                `${d.getSeconds().toString().padStart(2, "0")}`
         );
     }
 
     private styleMessage(sev: Severity, msg: string) {
-        const useLight = this.dimNext; // per-call
-        const c = useLight ? lightColors[sev] : fillColors[sev];
-        const result = c(` ${msg} `);
-
-        this.dimNext = false; // reset after use
-        return result;
+        const colored = textColors[sev](msg);
+        const styled = this.dimNext ? chalk.dim(colored) : colored;
+        this.dimNext = false; // reset after one use
+        return styled;
     }
 
     private base(sev: Severity, msg: string) {
-        return `${this.time()}${this.moduleTag}${this.styleMessage(sev, msg)}`;
-    }
+        return `${this.time()} ${this.moduleTag} ${this.styleMessage(sev, msg)}`;
+    } 
 
     success(msg: unknown) {
         console.log(this.base("success", String(msg)));
