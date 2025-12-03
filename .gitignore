@@ -7,4 +7,6 @@ backgrounds/banner-cache
 .DS_Store
 backgrounds/*
 !backgrounds/.gitkeep
+logs/*
+!logs/.gitkeep
 .cursor/rules
