@@ -174,7 +174,7 @@ export class NewsService {
                     bannerTitleOverrides[beatmapset.id] ?? beatmapset.title
                 )
                     .then((generatedBanners) =>
-                        log.success(
+                        log.dim().success(
                             `${generatedBanners ? "Created" : "Using cached"} banners for ${chalk.underline(
                                 beatmapset.title
                             )} [#${beatmapset.id}]`
@@ -423,6 +423,6 @@ export class NewsService {
             }) + "\n"
         );
 
-        log.success(`Generated news post at ${newsPath}`);
+        log.dim().success(`Generated news post at ${newsPath}`);
     }
 }
