@@ -24,19 +24,24 @@ function resolveErrorMessage(error: unknown): string {
 }
 
 /**
- * Logs an error to the console
+ * Logs an error to the console natively
  * @param error The error to log
  */
-function logError(error: unknown) {
+function nativeLogError(error: unknown) {
     console.error(chalk.red(resolveErrorMessage(error)));
 }
 
 /**
  * Logs an error to the console and exits the process
- * @param error The error to log
+ * @param error The error to natively log or logger instance to log the error with
  */
-export function logAndExit(error: unknown): never {
-    logError(error);
+export function logAndExit(error: Logger | unknown, text?: string): never {
+    if (error instanceof Logger) {
+        error.error(text);
+    } else {
+        nativeLogError(error);
+    }
+
     process.exit(1);
 }
 
@@ -89,7 +94,7 @@ export class Logger {
 
     private base(sev: Severity, msg: string) {
         return `${this.time()} ${this.moduleTag} ${this.styleMessage(sev, msg)}`;
-    } 
+    }
 
     success(msg: unknown) {
         console.log(this.base("success", String(msg)));
