@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { platform } from "node:process";
-import { logInfo, logSuccess, logWarning } from "./logger";
+import { Logger } from "./logger";
+
+const log = new Logger("git-update");
 
 const updateCachePath = "config/update-cache";
 
@@ -25,23 +27,23 @@ export async function tryUpdate(force = false): Promise<void> {
         spawnSync("git", ["--version"]).error != null ||
         spawnSync("pnpm", ["--version"], { shell: platform === "win32" }).error != null
     ) {
-        logWarning("Skipping update check: missing git or pnpm");
+        log.warning("Skipping update check: missing git or pnpm");
         return;
     }
 
     // Check repository status
     if (spawnSync("git", ["symbolic-ref", "--short", "HEAD"]).stdout.toString().trim() !== "master") {
-        logWarning("Skipping update check: branch not set to master");
+        log.warning("Skipping update check: branch not set to master");
         return;
     }
 
     if (spawnSync("git", ["diff", "--quiet"]).status !== 0) {
-        logWarning("Skipping update check: working directory not clean");
+        log.warning("Skipping update check: working directory not clean");
         return;
     }
 
     // Check for and apply updates
-    logInfo("Checking for updates");
+    log.info("Checking for updates");
 
     spawnSync("git", ["fetch", "--quiet"]);
     const update = spawnSync("git", ["diff", "--quiet", "..FETCH_HEAD"]).status === 1;
@@ -50,12 +52,12 @@ export async function tryUpdate(force = false): Promise<void> {
         spawnSync("git", ["merge", "--ff-only", "--quiet", "FETCH_HEAD"]);
 
         const commitHash = spawnSync("git", ["show", "--format=%h", "--no-patch", "HEAD"]).stdout.toString().trim();
-        logSuccess(`Updated to ${commitHash}`);
+        log.success(`Updated to ${commitHash}`);
 
         spawnSync("pnpm", ["install"], { shell: platform === "win32", stdio: "ignore" });
-        logSuccess("Installed/upgraded node packages");
+        log.success("Installed/upgraded node packages");
     } else {
-        logInfo("No update found");
+        log.info("No update found");
     }
 
     // Save last update time
@@ -63,7 +65,7 @@ export async function tryUpdate(force = false): Promise<void> {
 
     // Restart program if updated
     if (update) {
-        logWarning("Restarting...\n");
+        log.warning("Restarting...\n");
         spawnSync(process.argv[0], process.argv.slice(1), { stdio: "inherit" });
         process.exit();
     }
