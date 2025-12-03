@@ -32,9 +32,9 @@ async function prompt(question: string, defaultValue?: string): Promise<string> 
 export const messagesCommand = new Command("messages")
     .description("Send chat announcements to nominated mappers")
     .option("-r, --round <id>", "Override the round ID from config", parseInt)
+    .option("--poll-start <guess>", "Poll start time guess (skips interactive prompt)")
     .option("--dry-run", "Preview messages without sending them")
     .option("--skip-update", "Skip checking for updates")
-    .option("--poll-start <guess>", "Poll start time guess (skips interactive prompt)")
     .action(async (options) => {
         if (!options.skipUpdate) {
             await tryUpdate();
