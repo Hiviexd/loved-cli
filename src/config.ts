@@ -17,15 +17,11 @@ const ConfigSchema = z.object({
     botApiClient: BotApiClientSchema,
     bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
     lovedWebApiKey: z.string().min(1, "loved.sh API key is required"),
-    lovedWebBaseUrl: z
-        .string()
-        .url("lovedWebBaseUrl must be a valid URL")
-        .transform((url) => url.replace(/\/+$/, "")),
+    lovedWebBaseUrl: z.url("lovedWebBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
+    lovedAdminApiKey: z.string().min(1, "loved.sh admin API key is required"),
+    lovedAdminBaseUrl: z.url("lovedAdminBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
     lovedRoundId: z.number().int().positive("lovedRoundId must be a positive integer"),
-    osuBaseUrl: z
-        .string()
-        .url("osuBaseUrl must be a valid URL")
-        .transform((url) => url.replace(/\/+$/, "")),
+    osuBaseUrl: z.url("osuBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
     osuWikiPath: z.string().default(""),
 });
 
