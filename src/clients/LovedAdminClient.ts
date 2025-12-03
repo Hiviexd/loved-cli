@@ -13,8 +13,9 @@ export class LovedAdminClient extends BaseApiClient {
     }
 
     /**
-     * DELETE /nominations/:nominationId
      * Deletes a nomination
+     * @param nominationId The ID of the nomination to delete
+     * @endpoint `DELETE` `/nominations/:nominationId`
      */
     public async deleteNomination(nominationId: number): Promise<void> {
         try {
@@ -25,8 +26,11 @@ export class LovedAdminClient extends BaseApiClient {
     }
 
     /**
-     * POST /rounds/:roundId/messages
      * Sends messages to nominated mappers
+     * @param roundId The ID of the round to send messages for
+     * @param pollStartGuess The guess for when the polls will start (default: "soon")
+     * @param dryRun Whether to run the operation in dry run mode (no changes are made)
+     * @endpoint `POST` `/rounds/:roundId/messages`
      */
     public async sendMessages(
         roundId: number,
@@ -45,8 +49,10 @@ export class LovedAdminClient extends BaseApiClient {
     }
 
     /**
-     * POST /polls/:roundId/start
      * Starts polls for a round
+     * @param roundId The ID of the round to start polls for
+     * @param dryRun Whether to run the operation in dry run mode (no changes are made)
+     * @endpoint `POST` `/polls/:roundId/start`
      */
     public async startPolls(roundId: number, dryRun: boolean = false): Promise<PollStartResponse> {
         try {
@@ -60,14 +66,29 @@ export class LovedAdminClient extends BaseApiClient {
     }
 
     /**
-     * POST /polls/:roundId/end/forum
-     * Ends polls and posts forum results
+     * Performs forum operations for ending a round:
+     * - Replies to all active polls with the results and locks them
+     * - Posts results in the main threads and unpins them
+     * @param roundId The ID of the round to end polls for
+     * @param dryRun Whether to run the operation in dry run mode (no changes are made)
+     * @param force Whether to disregard the poll timers and process results immediately
+     * @endpoint `POST` `/polls/:roundId/end/forum`
      */
-    public async endPollsForum(roundId: number, dryRun: boolean = false): Promise<PollEndForumResponse> {
+    public async endPollsForum(
+        roundId: number,
+        dryRun: boolean = false,
+        force: boolean = false
+    ): Promise<PollEndForumResponse> {
         try {
-            const response = await this.api.post(`/polls/${roundId}/end/forum`, {
-                dry_run: dryRun,
-            });
+            const response = await this.api.post(
+                `/polls/${roundId}/end/forum`,
+                {
+                    dry_run: dryRun,
+                },
+                {
+                    params: force ? { force: 1 } : undefined,
+                }
+            );
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -75,14 +96,28 @@ export class LovedAdminClient extends BaseApiClient {
     }
 
     /**
-     * POST /polls/:roundId/end/chat
-     * Ends polls and sends chat announcements
+     * Performs chat operations for ending a round:
+     * - Sends a congratulatory message to all mappers and GDers whose maps passed the polls
+     * @param roundId The ID of the round to end polls for
+     * @param dryRun Whether to run the operation in dry run mode (no changes are made)
+     * @param force Whether to disregard the poll timers and process results immediately
+     * @endpoint `POST` `/polls/:roundId/end/chat`
      */
-    public async endPollsChat(roundId: number, dryRun: boolean = false): Promise<PollEndChatResponse> {
+    public async endPollsChat(
+        roundId: number,
+        dryRun: boolean = false,
+        force: boolean = false
+    ): Promise<PollEndChatResponse> {
         try {
-            const response = await this.api.post(`/polls/${roundId}/end/chat`, {
-                dry_run: dryRun,
-            });
+            const response = await this.api.post(
+                `/polls/${roundId}/end/chat`,
+                {
+                    dry_run: dryRun,
+                },
+                {
+                    params: force ? { force: 1 } : undefined,
+                }
+            );
             return response.data;
         } catch (error) {
             this.handleError(error);
