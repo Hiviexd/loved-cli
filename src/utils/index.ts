@@ -2,4 +2,4 @@ export * from "./logger";
 export * from "./markdown";
 export * from "./formatting";
 export * from "./git-update";
-export * from "./rate-limiter";
+export * from "./misc";

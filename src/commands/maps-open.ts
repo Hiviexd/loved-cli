@@ -4,6 +4,7 @@ import { loadConfig } from "../config";
 import { LovedWebClient } from "../clients/LovedWebClient";
 import { logAndExit, logInfo } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
+import { sleep } from "../utils/misc";
 
 export const mapsOpenCommand = new Command("open")
     .description("Open all nominated beatmapsets in the browser")
@@ -27,6 +28,8 @@ export const mapsOpenCommand = new Command("open")
 
         for (const beatmapsetId of beatmapsetIdSet) {
             await open(`https://osu.ppy.sh/beatmapsets/${beatmapsetId}`);
-            // TODO add delay
+            console.log(`Opened beatmapset #${beatmapsetId}`);
+            await sleep(500);
         }
+        console.log("Done");
     });

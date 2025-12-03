@@ -7,6 +7,7 @@ import { loadConfig } from "../config";
 import { LovedWebClient } from "../clients/LovedWebClient";
 import { logAndExit, logWarning, logSuccess, logInfo } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
+import { sleep } from "../utils/misc";
 import { BannerService } from "../services/BannerService";
 
 export const mapsDownloadCommand = new Command("download")
@@ -43,6 +44,7 @@ export const mapsDownloadCommand = new Command("download")
                 );
                 await writeFile(join(backgroundDir, `${beatmapsetId}.jpg`), response.data);
                 logSuccess(`Downloaded background for beatmapset #${beatmapsetId}`);
+                await sleep(500);
             } catch (error) {
                 if (axios.isAxiosError(error) && (error.response?.status === 403 || error.response?.status === 404)) {
                     logWarning(`Beatmapset #${beatmapsetId} does not have a background`);
