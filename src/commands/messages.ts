@@ -3,10 +3,9 @@ import chalk from "chalk";
 import * as readline from "node:readline";
 import { loadConfig } from "../config";
 import { LovedWebClient } from "../clients/LovedWebClient";
-import { Logger,logAndExit } from "../utils/logger";
+import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
-import { exportDryRun } from "../utils/dry-runs";
 
 const log = new Logger("messages");
 
@@ -62,12 +61,7 @@ export const messagesCommand = new Command("messages")
         }
 
         const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
-        const messageResponse = await lovedAdmin.sendMessages(roundId, pollStartGuess, options.dryRun).catch(logAndExit);
+        await lovedAdmin.sendMessages(roundId, pollStartGuess, options.dryRun).catch(logAndExit);
 
-        if (options.dryRun) {
-            log.warning("DRY RUN: No messages were actually sent!");
-            exportDryRun("message", messageResponse);
-        } else {
-            log.success("Done sending messages!");
-        }
+        log.success("Done sending messages!");
     });

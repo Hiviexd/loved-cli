@@ -1,6 +1,7 @@
 import { BaseApiClient } from "./BaseApiClient";
 import type { MessageResponse, PollStartResponse, PollEndForumResponse, PollEndChatResponse } from "../models/types";
 import { Logger } from "../utils/logger";
+import { exportDryRun } from "../utils/dry-runs";
 
 const log = new Logger("loved-admin");
 
@@ -43,12 +44,17 @@ export class LovedAdminClient extends BaseApiClient {
     ): Promise<MessageResponse> {
         try {
             log.dim().info(`Executing POST /rounds/${roundId}/messages with options:`);
-            log.dim().info(`- dry_run: ${dryRun}`);
-            log.dim().info(`- poll_start_guess: ${pollStartGuess}`);
+            log.dim().info(`dry_run: ${dryRun}`);
+            log.dim().info(`poll_start_guess: ${pollStartGuess}`);
             const response = await this.api.post(`/rounds/${roundId}/messages`, {
                 dry_run: dryRun,
                 poll_start_guess: pollStartGuess,
             });
+
+            if (dryRun) {
+                exportDryRun("message", response.data);
+            }
+
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -64,10 +70,15 @@ export class LovedAdminClient extends BaseApiClient {
     public async startPolls(roundId: number, dryRun: boolean = false): Promise<PollStartResponse> {
         try {
             log.dim().info(`Executing POST /polls/${roundId}/start with options:`);
-            log.dim().info(`- dry_run: ${dryRun}`);
+            log.dim().info(`dry_run: ${dryRun}`);
             const response = await this.api.post(`/polls/${roundId}/start`, {
                 dry_run: dryRun,
             });
+
+            if (dryRun) {
+                exportDryRun("poll-start", response.data);
+            }
+
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -90,8 +101,8 @@ export class LovedAdminClient extends BaseApiClient {
     ): Promise<PollEndForumResponse> {
         try {
             log.dim().info(`Executing POST /polls/${roundId}/end/forum with options:`);
-            log.dim().info(`- dry_run: ${dryRun}`);
-            log.dim().info(`- force: ${force}`);
+            log.dim().info(`dry_run: ${dryRun}`);
+            log.dim().info(`force: ${force}`);
             const response = await this.api.post(
                 `/polls/${roundId}/end/forum`,
                 {
@@ -101,6 +112,11 @@ export class LovedAdminClient extends BaseApiClient {
                     params: force ? { force: 1 } : undefined,
                 }
             );
+
+            if (dryRun) {
+                exportDryRun("poll-end-forum", response.data);
+            }
+
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -122,8 +138,8 @@ export class LovedAdminClient extends BaseApiClient {
     ): Promise<PollEndChatResponse> {
         try {
             log.dim().info(`Executing POST /polls/${roundId}/end/chat with options:`);
-            log.dim().info(`- dry_run: ${dryRun}`);
-            log.dim().info(`- force: ${force}`);
+            log.dim().info(`dry_run: ${dryRun}`);
+            log.dim().info(`force: ${force}`);
             const response = await this.api.post(
                 `/polls/${roundId}/end/chat`,
                 {
@@ -133,6 +149,11 @@ export class LovedAdminClient extends BaseApiClient {
                     params: force ? { force: 1 } : undefined,
                 }
             );
+
+            if (dryRun) {
+                exportDryRun("poll-end-chat", response.data);
+            }
+
             return response.data;
         } catch (error) {
             this.handleError(error);
