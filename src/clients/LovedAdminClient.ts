@@ -1,5 +1,8 @@
 import { BaseApiClient } from "./BaseApiClient";
 import type { MessageResponse, PollStartResponse, PollEndForumResponse, PollEndChatResponse } from "../models/types";
+import { Logger } from "../utils/logger";
+
+const log = new Logger("loved-admin");
 
 /**
  * Client for interacting with the admin.loved.sh API
@@ -19,6 +22,7 @@ export class LovedAdminClient extends BaseApiClient {
      */
     public async deleteNomination(nominationId: number): Promise<void> {
         try {
+            log.info(`Executing DELETE /nominations/${nominationId}`);
             await this.api.delete(`/nominations/${nominationId}`);
         } catch (error) {
             this.handleError(error);
@@ -38,6 +42,9 @@ export class LovedAdminClient extends BaseApiClient {
         dryRun: boolean = false
     ): Promise<MessageResponse> {
         try {
+            log.dim().info(`Executing POST /rounds/${roundId}/messages with options:`);
+            log.dim().info(`- dry_run: ${dryRun}`);
+            log.dim().info(`- poll_start_guess: ${pollStartGuess}`);
             const response = await this.api.post(`/rounds/${roundId}/messages`, {
                 dry_run: dryRun,
                 poll_start_guess: pollStartGuess,
@@ -56,6 +63,8 @@ export class LovedAdminClient extends BaseApiClient {
      */
     public async startPolls(roundId: number, dryRun: boolean = false): Promise<PollStartResponse> {
         try {
+            log.dim().info(`Executing POST /polls/${roundId}/start with options:`);
+            log.dim().info(`- dry_run: ${dryRun}`);
             const response = await this.api.post(`/polls/${roundId}/start`, {
                 dry_run: dryRun,
             });
@@ -80,6 +89,9 @@ export class LovedAdminClient extends BaseApiClient {
         force: boolean = false
     ): Promise<PollEndForumResponse> {
         try {
+            log.dim().info(`Executing POST /polls/${roundId}/end/forum with options:`);
+            log.dim().info(`- dry_run: ${dryRun}`);
+            log.dim().info(`- force: ${force}`);
             const response = await this.api.post(
                 `/polls/${roundId}/end/forum`,
                 {
@@ -109,6 +121,9 @@ export class LovedAdminClient extends BaseApiClient {
         force: boolean = false
     ): Promise<PollEndChatResponse> {
         try {
+            log.dim().info(`Executing POST /polls/${roundId}/end/chat with options:`);
+            log.dim().info(`- dry_run: ${dryRun}`);
+            log.dim().info(`- force: ${force}`);
             const response = await this.api.post(
                 `/polls/${roundId}/end/chat`,
                 {
