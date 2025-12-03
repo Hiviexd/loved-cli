@@ -6,6 +6,7 @@ import { NewsService } from "../services/NewsService";
 import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
+import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
 
 const log = new Logger("news");
 
@@ -20,15 +21,18 @@ export const newsCommand = new Command("news")
     .option("--dry-run", "Preview without making changes")
     .option("--skip-update", "Skip checking for updates")
     .action(async (options) => {
-        // Handle option conflicts
-        if (options.bannersOnly && options.skipBanners) {
-            logAndExit(log, "Cannot use --banners-only and --skip-banners together");
-        }
+        checkMutuallyExclusiveFlags(log, {
+            bannersOnly: options.bannersOnly,
+            discordOnly: options.discordOnly,
+            threads: options.threads,
+        }, "only flags");
 
-        if (options.discordOnly && options.skipDiscord) {
-            logAndExit(log, "Cannot use --discord-only and --skip-discord together");
-        }
+        checkFlagConflicts(log, [
+            [options.bannersOnly, options.skipBanners, "--banners-only and --skip-banners"],
+            [options.discordOnly, options.skipDiscord, "--discord-only and --skip-discord"],
+        ]);
 
+        // Manual check to ensure --dry-run can only be used with --threads
         if (options.dryRun && !options.threads) {
             logAndExit(log, "Cannot use --dry-run without --threads");
         }
@@ -97,3 +101,5 @@ export const newsCommand = new Command("news")
 
         log.success("Done generating news posts" + (options.threads ? " and forum threads" : ""));
     });
+
+// TODO: Discord flag handling
