@@ -1,11 +1,11 @@
 import { Command } from "commander";
 import { join } from "node:path";
 import { loadConfig } from "../config";
-import { OsuApiService } from "../services/OsuApiService";
 import { LovedWebClient } from "../clients/LovedWebClient";
 import { NewsService } from "../services/NewsService";
 import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
+import { LovedAdminClient } from "../clients/LovedAdminClient";
 
 const log = new Logger("news");
 
@@ -20,6 +20,19 @@ export const newsCommand = new Command("news")
     .option("--dry-run", "Preview without making changes")
     .option("--skip-update", "Skip checking for updates")
     .action(async (options) => {
+        // Handle option conflicts
+        if (options.bannersOnly && options.skipBanners) {
+            logAndExit(log, "Cannot use --banners-only and --skip-banners together");
+        }
+
+        if (options.discordOnly && options.skipDiscord) {
+            logAndExit(log, "Cannot use --discord-only and --skip-discord together");
+        }
+
+        if (options.dryRun && !options.threads) {
+            logAndExit(log, "Cannot use --dry-run without --threads");
+        }
+
         if (!options.skipUpdate) {
             await tryUpdate(options.threads);
         }
@@ -27,9 +40,8 @@ export const newsCommand = new Command("news")
         const config = await loadConfig();
         const roundId = options.round ?? config.lovedRoundId;
 
-        if (!config.osuWikiPath && !options.bannersOnly) {
-            log.error(new Error("osuWikiPath is not set in config"));
-            log.error(new Error("Set it to the path of your osu-wiki fork"));
+        if (!config.osuWikiPath) {
+            logAndExit(new Error("osuWikiPath is not set in config! Set it to the path of your osu-wiki fork"));
         }
 
         const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
@@ -66,11 +78,11 @@ export const newsCommand = new Command("news")
             return;
         }
 
-        // Create forum topics
+        // Start polls
         if (options.threads) {
-            const osuApi = new OsuApiService(config.osuBaseUrl, config.botApiClient.id, config.botApiClient.secret);
-
-            await NewsService.generateTopics(lovedWeb, osuApi, roundInfo, roundId, options.dryRun).catch(logAndExit);
+            log.info("Generating forum threads...");
+            const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
+            await lovedAdmin.startPolls(roundId, options.dryRun).catch(logAndExit);
         }
 
         // Generate news post
@@ -83,5 +95,5 @@ export const newsCommand = new Command("news")
             ).catch(logAndExit);
         }
 
-        log.success("Done generating news posts");
+        log.success("Done generating news posts" + (options.threads ? " and forum threads" : ""));
     });
