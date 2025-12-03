@@ -7,7 +7,7 @@ import { BannerService } from "./BannerService";
 import { TemplateService } from "./TemplateService";
 import Ruleset from "../models/Ruleset";
 import type { Nomination, RoundInfo, Beatmapset, Beatmap } from "../models/types";
-import { logInfo, logSuccess, logWarning, log, NoTraceError } from "../utils/logger";
+import { Logger, logAndExit, NoTraceError } from "../utils/logger";
 import {
     convertToMarkdown,
     escapeMarkdown,
@@ -17,6 +17,8 @@ import {
     minOf,
     videoHtml,
 } from "../utils/index";
+
+const log = new Logger("news");
 
 /**
  * Service for generating news posts, banners, and forum topics
@@ -127,12 +129,12 @@ export class NewsService {
                 }
             }
         } catch {
-            logWarning(`Background directory ${backgroundDir}/ not found. Run "loved maps download" first.`);
+            log.warning(`Background directory ${backgroundDir}/ not found. Run "loved maps download" first.`);
         }
 
         for (const beatmapset of beatmapsets) {
             if (paths[beatmapset.id] == null) {
-                logWarning(
+                log.warning(
                     `Missing background image for ${chalk.underline(beatmapset.title)} [#${
                         beatmapset.id
                     }], using default`
@@ -160,7 +162,7 @@ export class NewsService {
         beatmapsets: Beatmapset[],
         bannerTitleOverrides: Record<string, string>
     ): Promise<void> {
-        logInfo("Generating beatmapset banners");
+        log.info("Generating beatmapset banners");
 
         await mkdir(bannersPath, { recursive: true });
 
@@ -172,7 +174,7 @@ export class NewsService {
                     bannerTitleOverrides[beatmapset.id] ?? beatmapset.title
                 )
                     .then((generatedBanners) =>
-                        logSuccess(
+                        log.success(
                             `${generatedBanners ? "Created" : "Using cached"} banners for ${chalk.underline(
                                 beatmapset.title
                             )} [#${beatmapset.id}]`
@@ -184,7 +186,7 @@ export class NewsService {
                                 `Failed to create banners for ${chalk.underline(beatmapset.title)} [#${beatmapset.id}]:`
                             )
                         );
-                        log(error);
+                        log.error(error);
                         throw new NoTraceError();
                     })
             )
@@ -201,23 +203,23 @@ export class NewsService {
         roundId: number,
         dryRun: boolean
     ): Promise<void> {
-        logInfo("Generating forum topics");
+        log.info("Generating forum topics");
 
         let error = false;
 
         for (const nomination of roundInfo.allNominations) {
             if (nomination.description == null) {
-                console.error(chalk.red(`Missing description for nomination #${nomination.id}`));
+                log.error(new Error(`Missing description for nomination #${nomination.id}`));
                 error = true;
             }
             if (nomination.beatmapset_creators.length === 0) {
-                console.error(chalk.red(`Missing creators for nomination #${nomination.id}`));
+                log.error(new Error(`Missing creators for nomination #${nomination.id}`));
                 error = true;
             }
         }
 
         if (error) {
-            throw new NoTraceError();
+            logAndExit(new NoTraceError());
         }
 
         // Load templates
@@ -292,10 +294,10 @@ export class NewsService {
             nominationTopicBodies
         );
 
-        logInfo("Pinning main topics");
+        log.info("Pinning main topics");
         await Promise.all(mainTopicIds.map((topicId) => osuApi.pinTopic(topicId, 2)));
 
-        logInfo("Uploading topic covers");
+        log.info("Uploading topic covers");
         await Promise.all(
             roundInfo.allNominations.map((nomination) => {
                 if (nomination.beatmapset.bgPath != null) {
@@ -319,7 +321,7 @@ export class NewsService {
         roundId: number,
         topicIds: Record<number, number>
     ): Promise<void> {
-        logInfo("Generating news post");
+        log.info("Generating news post");
 
         const gameModeSectionStrings: string[] = [];
         const gameModesPresent: Ruleset[] = [];
@@ -337,7 +339,7 @@ export class NewsService {
             packUrls[gameMode.id] = encodeURI(NewsService.packUrl(roundId, roundInfo.title, gameMode));
 
             if (nominationsForMode.length === 0) {
-                logWarning(`Skipping ${gameMode.longName}, there are no nominations`);
+                log.warning(`Skipping ${gameMode.longName}, there are no nominations`);
                 continue;
             }
 
@@ -357,7 +359,7 @@ export class NewsService {
                 }
 
                 if (errors.length > 0) {
-                    logWarning(`Skipping nomination #${nomination.id} with ${joinList(errors)}`);
+                    log.warning(`Skipping nomination #${nomination.id} with ${joinList(errors)}`);
                     continue;
                 }
 
@@ -421,6 +423,6 @@ export class NewsService {
             }) + "\n"
         );
 
-        logSuccess(`Generated news post at ${newsPath}`);
+        log.success(`Generated news post at ${newsPath}`);
     }
 }

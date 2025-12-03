@@ -2,9 +2,11 @@ import { Command } from "commander";
 import open from "open";
 import { loadConfig } from "../config";
 import { LovedWebClient } from "../clients/LovedWebClient";
-import { logAndExit, logInfo } from "../utils/logger";
+import { Logger,logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { sleep } from "../utils/misc";
+
+const log = new Logger("maps-open");
 
 export const mapsOpenCommand = new Command("open")
     .description("Open all nominated beatmapsets in the browser")
@@ -24,12 +26,12 @@ export const mapsOpenCommand = new Command("open")
         const beatmapsetIds = roundInfo.nominations.map((n) => n.beatmapset_id);
         const beatmapsetIdSet = new Set(beatmapsetIds);
 
-        logInfo(`Opening ${beatmapsetIdSet.size} beatmapsets in browser...`);
+        log.info(`Opening ${beatmapsetIdSet.size} beatmapsets in browser...`);
 
         for (const beatmapsetId of beatmapsetIdSet) {
             await open(`https://osu.ppy.sh/beatmapsets/${beatmapsetId}`);
-            console.log(`Opened beatmapset #${beatmapsetId}`);
+            log.dim().success(`Opened beatmapset #${beatmapsetId}`);
             await sleep(500);
         }
-        console.log("Done");
+        log.success("Done opening beatmapsets in browser");
     });

@@ -1,14 +1,15 @@
 import { Command } from "commander";
-import chalk from "chalk";
 import { loadConfig } from "../config";
 import { OsuApiService } from "../services/OsuApiService";
 import { LovedWebClient } from "../clients/LovedWebClient";
 import { DiscordService } from "../services/DiscordService";
 import Ruleset from "../models/Ruleset";
 import type { DiscordEmbed } from "../models/types";
-import { logAndExit, logInfo, logWarning } from "../utils/logger";
+import { Logger, logAndExit } from "../utils/logger";
 import { escapeMarkdown, formatPercent, joinList } from "../utils/index";
 import { tryUpdate } from "../utils/git-update";
+
+const log = new Logger("results");
 
 export const resultsCommand = new Command("results")
     .description("Process voting results")
@@ -39,7 +40,6 @@ export const resultsCommand = new Command("results")
         const mainTopicIds = await osuApi.getModeTopics(120).catch(logAndExit);
 
         // Validate that nominations and topics match
-        let error = false;
         const gameModesPresent: Ruleset[] = [];
 
         for (const gameMode of Ruleset.all()) {
@@ -48,19 +48,12 @@ export const resultsCommand = new Command("results")
             );
 
             if ((mainTopicIds[gameMode.id] != null) !== gameModeHasNominations) {
-                console.error(
-                    chalk.red(`Nominations and main topics do not agree about ${gameMode.longName}'s presence`)
-                );
-                error = true;
+                logAndExit(new Error(`Nominations and main topics do not agree about ${gameMode.longName}'s presence`));
             }
 
             if (gameModeHasNominations) {
                 gameModesPresent.push(gameMode);
             }
-        }
-
-        if (error) {
-            process.exit(1);
         }
 
         // Discord-only mode
@@ -71,7 +64,7 @@ export const resultsCommand = new Command("results")
 
         // Lock and unpin topics
         if (!options.skipLock || !options.skipUnpin) {
-            logInfo("Locking and unpinning topics");
+            log.info("Locking and unpinning topics");
 
             const lockAndUnpinPromises: Promise<void>[] = [];
 
@@ -79,7 +72,7 @@ export const resultsCommand = new Command("results")
                 for (const nomination of roundInfo.allNominations) {
                     if (nomination.poll?.topic_id) {
                         if (options.dryRun) {
-                            console.log(chalk.yellow(`[DRY RUN] Would lock topic ${nomination.poll.topic_id}`));
+                            log.dim().warning(`DRY RUN: Would lock topic ${nomination.poll.topic_id}`);
                         } else {
                             lockAndUnpinPromises.push(osuApi.lockTopic(nomination.poll.topic_id));
                         }
@@ -92,14 +85,14 @@ export const resultsCommand = new Command("results")
                 if (topicId) {
                     if (!options.skipLock) {
                         if (options.dryRun) {
-                            console.log(chalk.yellow(`[DRY RUN] Would lock main topic ${topicId}`));
+                            log.dim().warning(`DRY RUN: Would lock main topic ${topicId}`);
                         } else {
                             lockAndUnpinPromises.push(osuApi.lockTopic(topicId));
                         }
                     }
                     if (!options.skipUnpin) {
                         if (options.dryRun) {
-                            console.log(chalk.yellow(`[DRY RUN] Would unpin main topic ${topicId}`));
+                            log.dim().warning(`DRY RUN: Would unpin main topic ${topicId}`);
                         } else {
                             lockAndUnpinPromises.push(osuApi.pinTopic(topicId, 0));
                         }
@@ -118,10 +111,10 @@ export const resultsCommand = new Command("results")
 
         // Save poll results
         if (!options.dryRun) {
-            logInfo("Saving poll results");
+            log.info("Saving poll results");
             await lovedWeb.postResults(roundId, mainTopicIds).catch(logAndExit);
         } else {
-            console.log(chalk.yellow("[DRY RUN] Would save poll results"));
+            log.dim().warning("DRY RUN: Would save poll results");
         }
 
         // Post Discord announcements
@@ -131,7 +124,7 @@ export const resultsCommand = new Command("results")
 
         // Send chat announcement to mappers of passed votings
         if (!options.skipChat) {
-            logInfo("Sending chat announcement to mappers of passed votings");
+            log.info("Sending chat announcement to mappers of passed votings");
 
             // Refresh round info to get results
             roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
@@ -164,13 +157,7 @@ export const resultsCommand = new Command("results")
 
             if (passedVotingCreatorIds.size > 0) {
                 if (options.dryRun) {
-                    console.log(
-                        chalk.yellow(
-                            `[DRY RUN] Would send chat to ${passedVotingCreatorIds.size} creators: ${[
-                                ...passedVotingCreatorIds,
-                            ].join(", ")}`
-                        )
-                    );
+                    log.dim().warning(`DRY RUN: Would send chat to ${passedVotingCreatorIds.size} creators: ${[...passedVotingCreatorIds].join(", ")}`)
                 } else {
                     await osuApi
                         .sendChatAnnouncement(
@@ -186,14 +173,14 @@ export const resultsCommand = new Command("results")
 
         // Remove topic watches
         if (!options.skipUnwatch) {
-            logInfo("Removing watches from topics");
+            log.info("Removing watches from topics");
 
             const watchPromises: Promise<void>[] = [];
 
             for (const nomination of roundInfo.allNominations) {
                 if (nomination.poll?.topic_id) {
                     if (options.dryRun) {
-                        console.log(chalk.yellow(`[DRY RUN] Would unwatch topic ${nomination.poll.topic_id}`));
+                        log.dim().warning(`DRY RUN: Would unwatch topic ${nomination.poll.topic_id}`);
                     } else {
                         watchPromises.push(osuApi.watchTopic(nomination.poll.topic_id, false));
                     }
@@ -204,7 +191,7 @@ export const resultsCommand = new Command("results")
                 const topicId = mainTopicIds[gameMode.id];
                 if (topicId) {
                     if (options.dryRun) {
-                        console.log(chalk.yellow(`[DRY RUN] Would unwatch main topic ${topicId}`));
+                        log.dim().warning(`DRY RUN: Would unwatch main topic ${topicId}`);
                     } else {
                         watchPromises.push(osuApi.watchTopic(topicId, false));
                     }
@@ -217,9 +204,9 @@ export const resultsCommand = new Command("results")
         }
 
         if (options.dryRun) {
-            console.log(chalk.yellow("\n[DRY RUN] No changes were made"));
+            log.dim().warning("DRY RUN: No changes were made");
         } else {
-            console.log(chalk.green("Done!"));
+            log.success("Done processing voting results");
         }
     });
 
@@ -232,7 +219,7 @@ async function postDiscordResults(
     config: Awaited<ReturnType<typeof loadConfig>>,
     dryRun: boolean
 ): Promise<void> {
-    logInfo("Posting announcements to Discord");
+    log.info("Posting announcements to Discord");
 
     for (const gameMode of gameModesPresent) {
         const nominations = roundInfo.allNominations.filter((nomination) => nomination.game_mode.id === gameMode.id);
@@ -240,7 +227,7 @@ async function postDiscordResults(
         const discordWebhook = roundInfo.discordWebhooks[gameMode.id];
 
         if (!discordWebhook) {
-            logWarning(`No Discord webhook configured for ${gameMode.longName}`);
+            log.warning(`No Discord webhook configured for ${gameMode.longName}`);
             continue;
         }
 
@@ -276,7 +263,7 @@ async function postDiscordResults(
         });
 
         if (dryRun) {
-            console.log(chalk.yellow(`[DRY RUN] Would post to Discord for ${gameMode.longName}`));
+            log.dim().warning(`DRY RUN: Would post to Discord for ${gameMode.longName}`);
             const discord = new DiscordService(discordWebhook);
             await discord.post(`Project Loved: ${gameMode.longName}`, config.messages.discordResults, embeds);
         } else {

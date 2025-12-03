@@ -1,6 +1,8 @@
 import chalk from "chalk";
 import { inspect } from "node:util";
 
+// ? Shared error utils
+
 /**
  * Error class that doesn't show stack trace when logged
  */
@@ -12,47 +14,110 @@ export class NoTraceError extends Error {
 }
 
 /**
- * Logs an error to stderr with appropriate formatting
+ * Resolves an error message from an unknown error
  */
-export function log(error: unknown): void {
-    let errorMessage = "Error occurred";
-
-    if (typeof error === "string") {
-        errorMessage = error;
-    } else if (error instanceof Error) {
-        errorMessage = error instanceof NoTraceError ? error.message : inspect(error);
-    }
-
-    if (errorMessage) {
-        console.error(chalk.red(errorMessage));
-    }
+function resolveErrorMessage(error: unknown): string {
+    if (typeof error === "string") return error;
+    if (error instanceof NoTraceError) return error.message;
+    if (error instanceof Error) return inspect(error);
+    return "Unknown error";
 }
 
 /**
- * Logs an error and exits the process
+ * Logs an error to the console
+ * @param error The error to log
+ */
+function logError(error: unknown) {
+    console.error(chalk.red(resolveErrorMessage(error)));
+}
+
+/**
+ * Logs an error to the console and exits the process
+ * @param error The error to log
  */
 export function logAndExit(error: unknown): never {
-    log(error);
+    logError(error);
     process.exit(1);
 }
 
-/**
- * Log a dimmed info message
- */
-export function logInfo(message: string): void {
-    console.error(chalk.dim(message));
-}
+// ? Color config
 
-/**
- * Log a success message
- */
-export function logSuccess(message: string): void {
-    console.error(chalk.dim.green(message));
-}
+const fillColors = {
+    success: chalk.bgGreen.black,
+    info: chalk.bgBlue.black,
+    warning: chalk.bgYellow.black,
+    error: chalk.bgRed.black,
+};
 
-/**
- * Log a warning message
- */
-export function logWarning(message: string): void {
-    console.error(chalk.yellow(message));
+const lightColors = {
+    success: chalk.green,
+    info: chalk.blue,
+    warning: chalk.yellow,
+    error: chalk.red,
+};
+
+type Severity = "success" | "info" | "warning" | "error";
+
+// ? Logger class
+
+export class Logger {
+    private moduleTag: string;
+    private dimNext = false;
+
+    constructor(moduleName: string) {
+        this.moduleTag = chalk.bgCyanBright.black(` ${moduleName} `);
+    }
+
+    /**
+     * Enable dim for ONE chained call.
+     * Example: logger.dim().info("msg")
+     */
+    dim(): this {
+        this.dimNext = true;
+        return this;
+    }
+
+    // format HH:MM:SS
+    private time() {
+        const d = new Date();
+        return chalk.bgBlackBright.white(
+            ` ${d.getHours().toString().padStart(2, "0")}:` +
+                `${d.getMinutes().toString().padStart(2, "0")}:` +
+                `${d.getSeconds().toString().padStart(2, "0")} `
+        );
+    }
+
+    private styleMessage(sev: Severity, msg: string) {
+        const useLight = this.dimNext; // per-call
+        const c = useLight ? lightColors[sev] : fillColors[sev];
+        const result = c(` ${msg} `);
+
+        this.dimNext = false; // reset after use
+        return result;
+    }
+
+    private base(sev: Severity, msg: string) {
+        return `${this.time()}${this.moduleTag}${this.styleMessage(sev, msg)}`;
+    }
+
+    success(msg: unknown) {
+        console.log(this.base("success", String(msg)));
+    }
+
+    info(msg: unknown) {
+        console.log(this.base("info", String(msg)));
+    }
+
+    warning(msg: unknown) {
+        console.warn(this.base("warning", String(msg)));
+    }
+
+    /**
+     * Logs an error to the console
+     * @param error The error to log and resolve
+     */
+    error(error: unknown) {
+        const resolved = resolveErrorMessage(error);
+        console.error(this.base("error", resolved));
+    }
 }

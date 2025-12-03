@@ -3,6 +3,9 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import chalk from "chalk";
+import { Logger } from "../utils/logger";	
+
+const log = new Logger("setup");
 
 interface ConfigData {
     botApiClient: {
@@ -67,15 +70,15 @@ export const setupCommand = new Command("setup")
         const existing = await loadExistingConfig();
         const rl = createInterface({ input: stdin, output: stdout });
 
-        console.log(chalk.cyan("\n📋 Project Loved Configuration Setup"));
-        console.log(chalk.dim("Press Enter to keep existing value or skip"));
-        console.log(chalk.dim("You can edit these anytime in config/config.json"));
-        console.log(chalk.dim("--------------------------------"));
-        console.log(chalk.dim("For lovedRoundId, set it manually every round\n"));
+        log.info("📋 Project Loved Configuration Setup");
+        log.dim().info("Press Enter to keep existing value or skip");
+        log.dim().info("You can edit these anytime in config/config.json");
+        log.dim().info("--------------------------------");
+        log.dim().info("For lovedRoundId, set it manually every round\n");
 
         try {
             // Bot API Client
-            console.log(chalk.yellow("─── osu! Bot API Client (ask Hivie for these) ───"));
+            log.warning("─── osu! Bot API Client (ask Hivie for these) ───");
             const botClientId = await prompt(rl, "Bot API Client ID", existing.botApiClient.id || undefined);
             const botClientSecret = await prompt(
                 rl,
@@ -83,17 +86,13 @@ export const setupCommand = new Command("setup")
                 existing.botApiClient.secret || undefined
             );
 
-            console.log();
-
             // loved.sh API
-            console.log(chalk.yellow("─── loved.sh API (get these from loved.sh) ───"));
+            log.warning("─── loved.sh API (get these from loved.sh) ───");
             const lovedWebApiKey = await prompt(rl, "loved.sh API Key", existing.lovedWebApiKey || undefined);
             const lovedWebBaseUrl = await prompt(rl, "loved.sh Base URL", existing.lovedWebBaseUrl);
 
-            console.log();
-
             // Paths
-            console.log(chalk.yellow("─── Paths ───"));
+            log.warning("─── Paths ───");
             const osuWikiPath = await prompt(rl, "osu-wiki repository path", existing.osuWikiPath || undefined);
 
             // Build config
@@ -113,8 +112,7 @@ export const setupCommand = new Command("setup")
             // Write config
             await writeFile("config/config.json", JSON.stringify(config, null, 2) + "\n");
 
-            console.log();
-            console.log(chalk.green("✓ Configuration saved to config/config.json"));
+            log.success("✓ Configuration saved to config/config.json");
 
             // Show warnings for missing required fields
             const warnings: string[] = [];
@@ -124,8 +122,8 @@ export const setupCommand = new Command("setup")
             if (!config.lovedRoundId) warnings.push("lovedRoundId (set manually every round)");
 
             if (warnings.length > 0) {
-                console.log(chalk.yellow(`\n⚠ Missing required fields: ${warnings.join(", ")}`));
-                console.log(chalk.dim("Edit config/config.json to complete the configuration"));
+                log.warning(`⚠ Missing required fields: ${warnings.join(", ")}`);
+                log.dim().info("Edit config/config.json to complete the configuration");
             }
         } finally {
             rl.close();

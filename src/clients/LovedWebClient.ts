@@ -1,9 +1,11 @@
 import Ruleset from "../models/Ruleset";
 import type { RoundInfo, Nomination, GameModeExtraInfo, User } from "../models/types";
-import { logInfo, logWarning } from "../utils/logger";
+import { Logger } from "../utils/logger";
 import { BaseApiClient } from "./BaseApiClient";
 
 const INTEROP_VERSION = "8";
+
+const log = new Logger("loved-web");
 
 /**
  * Client for interacting with the loved.sh API
@@ -37,7 +39,7 @@ export class LovedWebClient extends BaseApiClient {
                 const gameModeInfo = round.game_modes[gameMode.id];
 
                 if (!gameModeInfo.nominations_locked) {
-                    logWarning(`${gameMode.longName} nominations are not locked on loved.sh`);
+                    log.warning(`${gameMode.longName} nominations are not locked on loved.sh`);
                 }
 
                 extraGameModeInfo[gameMode.id] = {
@@ -49,7 +51,7 @@ export class LovedWebClient extends BaseApiClient {
                 };
 
                 if (resultsPostIds[gameMode.id] == null) {
-                    logWarning(`${gameMode.longName} last round results post is not set`);
+                    log.warning(`${gameMode.longName} last round results post is not set`);
                 }
             }
 
@@ -58,7 +60,7 @@ export class LovedWebClient extends BaseApiClient {
                 // Warn about placeholder creator IDs
                 for (const creator of nomination.beatmapset_creators as User[]) {
                     if (creator.id >= 4294000000) {
-                        logWarning(
+                        log.warning(
                             `Creator ${creator.name} on nomination #${nomination.id} has placeholder ID (#${creator.id})`
                         );
                     }
@@ -153,8 +155,8 @@ export class LovedWebClient extends BaseApiClient {
         mainTopicIdsMap: Record<number, number>;
         nominationTopicIds: Record<number, number>;
     }> {
-        logInfo("[loved.sh] Creating forum polls");
-        logInfo("[loved.sh] This may take a few minutes...");
+        log.info("Creating forum polls");
+        log.info("This may take a few minutes...");
 
         try {
             const response = await this.api.post("/news", {
@@ -167,13 +169,12 @@ export class LovedWebClient extends BaseApiClient {
             this.handleError(error);
         }
     }
-
     /**
      * Posts voting results for a round
      */
     async postResults(roundId: number, mainTopicIds: Record<number, number>): Promise<void> {
-        logInfo("[loved.sh] Posting replies to forum");
-        logInfo("[loved.sh] This may take a few minutes...");
+        log.info("Posting replies to forum");
+        log.info("This may take a few minutes...");
 
         try {
             await this.api.post("/results", { mainTopicIds, roundId });
@@ -182,4 +183,3 @@ export class LovedWebClient extends BaseApiClient {
         }
     }
 }
-

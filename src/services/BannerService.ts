@@ -4,8 +4,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createCanvas, loadImage, registerFont, type Image } from "canvas";
 import sharp from "sharp";
-import { logWarning } from "../utils/logger";
+import { Logger, logAndExit } from "../utils/logger";
 import { formatPercent } from "../utils/formatting";
+
+const log = new Logger("banner");
 
 // Canvas dimensions
 const UNSCALED_WIDTH = 670;
@@ -86,7 +88,7 @@ export class BannerService {
         }
 
         if (!outputPath) {
-            throw new Error("Output path not set");
+            logAndExit(new Error("Output path not set"));
         }
 
         this.initFont();
@@ -131,7 +133,7 @@ export class BannerService {
         const titleWidth = tempContext.measureText(title).width;
         if (titleWidth > titleMaxWidth) {
             const overflowPercent = formatPercent(titleWidth / titleMaxWidth - 1);
-            logWarning(`Title is ${overflowPercent} wider than the available space. Truncating title: "${title}"`);
+            log.warning(`Title is ${overflowPercent} wider than the available space. Truncating title: "${title}"`);
 
             // Truncate title to fit, adding ellipsis if needed
             let truncatedTitle = title;

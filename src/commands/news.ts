@@ -1,12 +1,13 @@
 import { Command } from "commander";
 import { join } from "node:path";
-import chalk from "chalk";
 import { loadConfig } from "../config";
 import { OsuApiService } from "../services/OsuApiService";
 import { LovedWebClient } from "../clients/LovedWebClient";
 import { NewsService } from "../services/NewsService";
-import { logAndExit } from "../utils/logger";
+import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
+
+const log = new Logger("news");
 
 export const newsCommand = new Command("news")
     .description("Generate news post and optionally create forum threads")
@@ -27,9 +28,8 @@ export const newsCommand = new Command("news")
         const roundId = options.round ?? config.lovedRoundId;
 
         if (!config.osuWikiPath && !options.bannersOnly) {
-            console.error(chalk.red("osuWikiPath is not set in config"));
-            console.error(chalk.red("Set it to the path of your osu-wiki fork"));
-            process.exit(1);
+            log.error(new Error("osuWikiPath is not set in config"));
+            log.error(new Error("Set it to the path of your osu-wiki fork"));
         }
 
         const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
@@ -83,5 +83,5 @@ export const newsCommand = new Command("news")
             ).catch(logAndExit);
         }
 
-        console.log(chalk.green("Done!"));
+        log.success("Done generating news posts");
     });

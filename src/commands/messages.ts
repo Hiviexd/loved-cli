@@ -6,8 +6,10 @@ import { OsuApiService } from "../services/OsuApiService";
 import { LovedWebClient } from "../clients/LovedWebClient";
 import { MessagesService } from "../services/MessagesService";
 import { TemplateService } from "../services/TemplateService";
-import { logAndExit, logInfo } from "../utils/logger";
+import { Logger,logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
+
+const log = new Logger("messages");
 
 /**
  * Prompts the user for input with an optional default value
@@ -56,7 +58,7 @@ export const messagesCommand = new Command("messages")
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
 
         if (roundInfo.nominations.length === 0) {
-            logInfo("No nominations found for this round");
+            log.info("No nominations found for this round");
             return;
         }
 
@@ -66,7 +68,7 @@ export const messagesCommand = new Command("messages")
 
         const osuApi = new OsuApiService(config.osuBaseUrl, config.botApiClient.id, config.botApiClient.secret);
 
-        logInfo(`Sending messages for ${roundInfo.nominations.length} nominations...`);
+        log.info(`Sending messages for ${roundInfo.nominations.length} nominations...`);
 
         for (const nomination of roundInfo.nominations) {
             const relatedNominations = roundInfo.allNominations.filter(
@@ -88,8 +90,8 @@ export const messagesCommand = new Command("messages")
         }
 
         if (options.dryRun) {
-            console.log(chalk.yellow("\n[DRY RUN] No messages were actually sent"));
+            log.warning("DRY RUN: No messages were actually sent");
         } else {
-            console.log(chalk.green("Done sending messages"));
+            log.success("Done sending messages");
         }
     });

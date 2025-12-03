@@ -1,8 +1,9 @@
 import axios, { AxiosInstance } from "axios";
 import chalk from "chalk";
-import { RateLimiter } from "../utils/rate-limiter";
-import { NoTraceError, logInfo, logSuccess } from "../utils/logger";
+import { Logger, NoTraceError } from "../utils/logger";
 import type { TokenCache } from "../models/types";
+
+const log = new Logger("osu-api");
 
 /**
  * Pin type for forum topics
@@ -16,13 +17,11 @@ export type PinType = 0 | 1 | 2;
  */
 export class OsuApiService {
     private api: AxiosInstance;
-    private limiter: RateLimiter;
     private chatToken: TokenCache = { token: "", expiresAt: null };
     private forumToken: TokenCache = { token: "", expiresAt: null };
 
     constructor(private baseUrl: string, private clientId: string, private clientSecret: string) {
         this.api = axios.create({ baseURL: `${baseUrl}/api/v2` });
-        this.limiter = new RateLimiter(1000); // 1 request per second
     }
 
     /**
@@ -37,7 +36,7 @@ export class OsuApiService {
             throw new NoTraceError("Bot API client ID or secret is not set");
         }
 
-        logInfo(`Requesting ${label} token...`);
+        log.info(`Requesting ${label} token...`);
 
         try {
             const response = await axios.post(`${this.baseUrl}/oauth/token`, {
@@ -49,7 +48,7 @@ export class OsuApiService {
 
             cache.token = response.data.access_token;
             cache.expiresAt = new Date(Date.now() + response.data.expires_in * 1000);
-            logSuccess(`${label} token expires at ${cache.expiresAt.toISOString()}`);
+            log.success(`${label} token expires at ${cache.expiresAt.toISOString()}`);
             return cache.token;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -81,24 +80,22 @@ export class OsuApiService {
     async pinTopic(topicId: number, type: PinType = 1): Promise<void> {
         const token = await this.getForumToken();
 
-        await this.limiter.run(async () => {
-            try {
-                await this.api.post(
-                    `/forums/topics/${topicId}/pin`,
-                    { pin: type },
-                    { headers: { Authorization: `Bearer ${token}` } }
+        try {
+            await this.api.post(
+                `/forums/topics/${topicId}/pin`,
+                { pin: type },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const typeLabel = ["Unpinned", "Pinned", "Announced"][type];
+            log.success(`${typeLabel} topic ${topicId}`);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw new NoTraceError(
+                    `Failed to pin topic ${topicId}: ${error.response?.data?.error || error.message}`
                 );
-                const typeLabel = ["Unpinned", "Pinned", "Announced"][type];
-                logSuccess(`${typeLabel} topic ${topicId}`);
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    throw new NoTraceError(
-                        `Failed to pin topic ${topicId}: ${error.response?.data?.error || error.message}`
-                    );
-                }
-                throw error;
             }
-        });
+            throw error;
+        }
     }
 
     /**
@@ -107,23 +104,21 @@ export class OsuApiService {
     async lockTopic(topicId: number): Promise<void> {
         const token = await this.getForumToken();
 
-        await this.limiter.run(async () => {
-            try {
-                await this.api.post(
-                    `/forums/topics/${topicId}/lock`,
-                    { lock: true },
-                    { headers: { Authorization: `Bearer ${token}` } }
+        try {
+            await this.api.post(
+                `/forums/topics/${topicId}/lock`,
+                { lock: true },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            log.success(`Locked topic ${topicId}`);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw new NoTraceError(
+                    `Failed to lock topic ${topicId}: ${error.response?.data?.error || error.message}`
                 );
-                logSuccess(`Locked topic ${topicId}`);
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    throw new NoTraceError(
-                        `Failed to lock topic ${topicId}: ${error.response?.data?.error || error.message}`
-                    );
-                }
-                throw error;
             }
-        });
+            throw error;
+        }
     }
 
     /**
@@ -136,39 +131,37 @@ export class OsuApiService {
 
         const token = await this.getChatToken();
 
-        await this.limiter.run(async () => {
-            try {
-                await this.api.post(
-                    "/chat/channels",
-                    {
-                        channel: { name, description },
-                        message,
-                        target_ids: userIds,
-                        type: "ANNOUNCE",
-                    },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                logSuccess(`Sent chat announcement to ${userIds.join(", ")}`);
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    const status = error.response?.status;
-                    if (status === 404 || status === 422) {
-                        console.error(
-                            chalk.red(
-                                `Failed to send chat announcement to ${userIds.join(
-                                    ", "
-                                )}:\n  One or more recipients not found`
-                            )
-                        );
-                        return;
-                    }
-                    throw new NoTraceError(
-                        `Failed to send chat announcement: ${error.response?.data?.error || error.message}`
+        try {
+            await this.api.post(
+                "/chat/channels",
+                {
+                    channel: { name, description },
+                    message,
+                    target_ids: userIds,
+                    type: "ANNOUNCE",
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            log.success(`Sent chat announcement to ${userIds.join(", ")}`);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status;
+                if (status === 404 || status === 422) {
+                    log.error(
+                        chalk.red(
+                            `Failed to send chat announcement to ${userIds.join(
+                                ", "
+                            )}:\n  One or more recipients not found`
+                        )
                     );
+                    return;
                 }
-                throw error;
+                throw new NoTraceError(
+                    `Failed to send chat announcement: ${error.response?.data?.error || error.message}`
+                );
             }
-        });
+            throw error;
+        }
     }
 
     // ==================== DUMMY METHODS ====================
@@ -179,7 +172,7 @@ export class OsuApiService {
      * This requires internal osu! website access
      */
     async storeTopicCover(filename: string, topicId: number): Promise<number> {
-        console.log(chalk.yellow(`[DUMMY] storeTopicCover called for topic ${topicId} with file ${filename}`));
+        log.warning(`[DUMMY] storeTopicCover called for topic ${topicId} with file ${filename}`);
         return 0; // Return dummy cover ID
     }
 
@@ -188,7 +181,7 @@ export class OsuApiService {
      * This requires internal osu! website access
      */
     async watchTopic(topicId: number, watch = true): Promise<void> {
-        console.log(chalk.yellow(`[DUMMY] watchTopic called for topic ${topicId}, watch=${watch}`));
+        log.warning(`[DUMMY] watchTopic called for topic ${topicId}, watch=${watch}`);
     }
 
     /**
@@ -196,7 +189,7 @@ export class OsuApiService {
      * This requires HTML scraping from the osu! website
      */
     async getModeTopics(_forumId: number): Promise<Record<number, number>> {
-        console.log(chalk.yellow(`[DUMMY] getModeTopics called - returning empty object`));
+        log.warning(`[DUMMY] getModeTopics called - returning empty object`);
         return {};
     }
 }
