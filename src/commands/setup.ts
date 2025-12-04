@@ -3,22 +3,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import chalk from "chalk";
-import { Logger } from "../utils/logger";	
+import { Logger } from "../utils/logger";
+import { Config } from "../config";
 
 const log = new Logger("setup");
-
-interface ConfigData {
-    botApiClient: {
-        id: string;
-        secret: string;
-    };
-    bannerTitleOverrides: Record<string, string>;
-    lovedWebApiKey: string;
-    lovedWebBaseUrl: string;
-    lovedRoundId: number;
-    osuBaseUrl: string;
-    osuWikiPath: string;
-}
 
 /**
  * Prompts the user for input with an optional default value
@@ -32,30 +20,25 @@ async function prompt(rl: ReturnType<typeof createInterface>, message: string, d
 /**
  * Loads existing config or returns defaults
  */
-async function loadExistingConfig(): Promise<ConfigData> {
-    const defaults: ConfigData = {
-        botApiClient: {
-            id: "",
-            secret: "",
-        },
-        bannerTitleOverrides: {},
+async function loadExistingConfig(): Promise<Config> {
+    const defaults: Config = {
         lovedWebApiKey: "",
         lovedWebBaseUrl: "https://loved.sh",
+        lovedAdminApiKey: "",
+        lovedAdminBaseUrl: "https://admin.loved.sh",
         lovedRoundId: 0,
         osuBaseUrl: "https://osu.ppy.sh",
         osuWikiPath: "",
+        bannerTitleOverrides: {} satisfies Record<string, string>,
+        webhookOverrides: [] satisfies { mode: string; url: string }[],
     };
 
     try {
         const content = await readFile("config/config.json", "utf8");
-        const existing = JSON.parse(content) as Partial<ConfigData>;
+        const existing = JSON.parse(content) as Partial<Config>;
         return {
             ...defaults,
             ...existing,
-            botApiClient: {
-                ...defaults.botApiClient,
-                ...existing.botApiClient,
-            },
         };
     } catch {
         return defaults;
@@ -77,36 +60,30 @@ export const setupCommand = new Command("setup")
         log.dim().info("For lovedRoundId, set it manually every round\n");
 
         try {
-            // Bot API Client
-            log.warning("─── osu! Bot API Client (ask Hivie for these) ───");
-            const botClientId = await prompt(rl, "Bot API Client ID", existing.botApiClient.id || undefined);
-            const botClientSecret = await prompt(
-                rl,
-                "Bot API Client Secret",
-                existing.botApiClient.secret || undefined
-            );
-
             // loved.sh API
-            log.warning("─── loved.sh API (get these from loved.sh) ───");
+            log.warning("─── loved.sh API (get the key from loved.sh) ───");
             const lovedWebApiKey = await prompt(rl, "loved.sh API Key", existing.lovedWebApiKey || undefined);
             const lovedWebBaseUrl = await prompt(rl, "loved.sh Base URL", existing.lovedWebBaseUrl);
+
+            log.warning("─── loved.sh Admin API (ask Hivie or Irisu for a key) ───");
+            const lovedAdminApiKey = await prompt(rl, "loved.sh Admin API Key", existing.lovedAdminApiKey || undefined);
+            const lovedAdminBaseUrl = await prompt(rl, "loved.sh Admin Base URL", existing.lovedAdminBaseUrl);
 
             // Paths
             log.warning("─── Paths ───");
             const osuWikiPath = await prompt(rl, "osu-wiki repository path", existing.osuWikiPath || undefined);
 
             // Build config
-            const config: ConfigData = {
-                botApiClient: {
-                    id: botClientId,
-                    secret: botClientSecret,
-                },
-                bannerTitleOverrides: existing.bannerTitleOverrides,
+            const config: Config = {
                 lovedWebApiKey,
                 lovedWebBaseUrl,
+                lovedAdminApiKey,
+                lovedAdminBaseUrl,
                 lovedRoundId: existing.lovedRoundId,
                 osuBaseUrl: existing.osuBaseUrl,
                 osuWikiPath,
+                bannerTitleOverrides: existing.bannerTitleOverrides,
+                webhookOverrides: existing.webhookOverrides,
             };
 
             // Write config
@@ -116,10 +93,12 @@ export const setupCommand = new Command("setup")
 
             // Show warnings for missing required fields
             const warnings: string[] = [];
-            if (!config.botApiClient.id) warnings.push("botApiClient.id");
-            if (!config.botApiClient.secret) warnings.push("botApiClient.secret");
+            if (!config.lovedAdminApiKey) warnings.push("lovedAdminApiKey");
+            if (!config.lovedAdminBaseUrl) warnings.push("lovedAdminBaseUrl");
             if (!config.lovedWebApiKey) warnings.push("lovedWebApiKey");
+            if (!config.lovedWebBaseUrl) warnings.push("lovedWebBaseUrl");
             if (!config.lovedRoundId) warnings.push("lovedRoundId (set manually every round)");
+            if (!config.osuWikiPath) warnings.push("osuWikiPath");
 
             if (warnings.length > 0) {
                 log.warning(`⚠ Missing required fields: ${warnings.join(", ")}`);
