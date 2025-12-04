@@ -1,5 +1,5 @@
 // Export config types
-export type { Config, Messages, LoadedConfig } from "../config";
+export type { Config } from "../config";
 
 // Export osu! game data types
 export type { User, Beatmap, Beatmapset, Poll } from "./osu";
