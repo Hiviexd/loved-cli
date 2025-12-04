@@ -7,6 +7,7 @@ import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
 import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
+import { createPollStartAnnouncement } from "../utils/discord";
 
 const log = new Logger("news");
 
@@ -21,11 +22,15 @@ export const newsCommand = new Command("news")
     .option("--dry-run", "Preview without making changes")
     .option("--skip-update", "Skip checking for updates")
     .action(async (options) => {
-        checkMutuallyExclusiveFlags(log, {
-            bannersOnly: options.bannersOnly,
-            discordOnly: options.discordOnly,
-            threads: options.threads,
-        }, "only flags");
+        checkMutuallyExclusiveFlags(
+            log,
+            {
+                bannersOnly: options.bannersOnly,
+                discordOnly: options.discordOnly,
+                threads: options.threads,
+            },
+            "only flags"
+        );
 
         checkFlagConflicts(log, [
             [options.bannersOnly, options.skipBanners, "--banners-only and --skip-banners"],
@@ -44,12 +49,21 @@ export const newsCommand = new Command("news")
         const config = await loadConfig();
         const roundId = options.round ?? config.lovedRoundId;
 
+        const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
+        const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
+
+        const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
+
+        if (options.discordOnly) {
+            await createPollStartAnnouncement(roundInfo, lovedAdmin).catch(logAndExit);
+            log.success("Done posting Discord announcements");
+            return;
+        }
+
         if (!config.osuWikiPath) {
             logAndExit(new Error("osuWikiPath is not set in config! Set it to the path of your osu-wiki fork"));
         }
 
-        const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
-        const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
         const postTimeIsoString = roundInfo.postTime.toISOString();
 
         // Add computed properties
@@ -85,8 +99,12 @@ export const newsCommand = new Command("news")
         // Start polls
         if (options.threads) {
             log.info("Generating forum threads...");
-            const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
             await lovedAdmin.startPolls(roundId, options.dryRun).catch(logAndExit);
+        }
+
+        // Post Discord announcements (after threads are created so poll URLs are available)
+        if (!options.skipDiscord) {
+            await createPollStartAnnouncement(roundInfo, lovedAdmin).catch(logAndExit);
         }
 
         // Generate news post
@@ -99,7 +117,10 @@ export const newsCommand = new Command("news")
             ).catch(logAndExit);
         }
 
-        log.success("Done generating news posts" + (options.threads ? " and forum threads" : ""));
-    });
+        const completedTasks = [];
+        if (options.threads) completedTasks.push("forum threads");
+        if (!options.skipDiscord) completedTasks.push("Discord announcements");
+        if (config.osuWikiPath) completedTasks.push("news posts");
 
-// TODO: Discord flag handling
+        log.success("Done generating " + completedTasks.join(", "));
+    });
