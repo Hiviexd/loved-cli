@@ -114,6 +114,23 @@ export interface PollEndChatResponseData {
 }
 
 /**
+ * Topic information
+ */
+export interface TopicInfo {
+    topic_id: number;
+    post_id: number;
+    created_at: string;
+}
+
+/**
+ * Response data for topics operations
+ */
+export interface TopicsResponseData {
+    round_id: number;
+    topics: Record<string, TopicInfo>;
+}
+
+/**
  * Typed response for /rounds/:roundId/messages endpoint
  */
 export type MessageResponse = AdminApiResponse<MessageResponseData>;
@@ -132,3 +149,8 @@ export type PollEndForumResponse = AdminApiResponse<PollEndForumResponseData>;
  * Typed response for /polls/:roundId/end/chat endpoint
  */
 export type PollEndChatResponse = AdminApiResponse<PollEndChatResponseData>;
+
+/**
+ * Typed response for /rounds/:roundId/topics endpoint
+ */
+export type TopicsResponse = AdminApiResponse<TopicsResponseData>;
