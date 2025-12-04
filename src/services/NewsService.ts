@@ -15,12 +15,20 @@ const log = new Logger("news");
  */
 export class NewsService {
     /**
-     * Gets extra information about a beatmapset for display
+     * Extracts the list of difficulty names that need special mention for a nomination.
+     * When most diffs are included, returns excluded diffs (reverseExclude = false).
+     * When most diffs are excluded, returns included diffs (reverseExclude = true).
+     *
+     * @param nomination The nomination to extract diff names from
+     * @returns Object with diffNames array and reverseExclude flag
      */
-    public static getExtraBeatmapsetInfo(nomination: Nomination): string {
-        const beatmaps: Beatmap[] = [];
+    public static getHighlightedDiffNames(nomination: Nomination, options?: { bracketed: boolean }): {
+        diffNames: string[];
+        reverseExclude: boolean;
+        
+    } {
         const beatmapsForMode = nomination.beatmaps.filter((b) => b.game_mode === nomination.game_mode.id);
-        const excludedDiffNames: string[] = [];
+        const diffNames: string[] = [];
         const reverseExclude = beatmapsForMode.filter((b) => b.excluded).length / beatmapsForMode.length > 0.5;
 
         for (const beatmap of beatmapsForMode) {
@@ -31,8 +39,23 @@ export class NewsService {
                 if (versionMatch == null) {
                     throw new Error(`Excluded beatmap version match failed for nomination #${nomination.id}`);
                 }
-                excludedDiffNames.push(`[${versionMatch[1]}]`);
+                diffNames.push(options?.bracketed ? `[${versionMatch[1]}]` : versionMatch[1]);
             }
+        }
+
+        return { diffNames, reverseExclude };
+    }
+
+    /**
+     * Gets extra information about a beatmapset for display
+     */
+    public static getExtraBeatmapsetInfo(nomination: Nomination): string {
+        const beatmaps: Beatmap[] = [];
+        const beatmapsForMode = nomination.beatmaps.filter((b) => b.game_mode === nomination.game_mode.id);
+        const { diffNames: excludedDiffNames, reverseExclude } = NewsService.getHighlightedDiffNames(nomination, { bracketed: true });
+
+        for (const beatmap of beatmapsForMode) {
+            const isExcluded = typeof beatmap.excluded === "boolean" ? beatmap.excluded : beatmap.excluded === 1;
 
             if (!isExcluded) {
                 beatmaps.push(beatmap);
@@ -141,7 +164,7 @@ export class NewsService {
     public static packUrl(roundId: number, roundTitle: string, ruleset: Ruleset): string {
         // TODO: This calculation may need adjustment for skipped modes/rounds
         const packNumber = (roundId - 109 + 1) * 4 - ruleset.id;
-        return `https://packs.ppy.sh/LR${packNumber} - ${roundTitle} (${ruleset.longName}).zip`;
+        return encodeURI(`https://packs.ppy.sh/LR${packNumber} - ${roundTitle} (${ruleset.longName}).zip`);
     }
 
     /**
@@ -214,7 +237,7 @@ export class NewsService {
             const extraInfo = roundInfo.extraGameModeInfo[gameMode.id];
             const nominationStrings: string[] = [];
             const nominationsForMode = roundInfo.allNominations.filter((n) => n.game_mode.id === gameMode.id);
-            packUrls[gameMode.id] = encodeURI(NewsService.packUrl(roundId, roundInfo.title, gameMode));
+            packUrls[gameMode.id] = NewsService.packUrl(roundId, roundInfo.title, gameMode);
 
             if (nominationsForMode.length === 0) {
                 log.warning(`Skipping ${gameMode.longName}, there are no nominations`);
