@@ -52,13 +52,14 @@ export abstract class BaseApiClient {
      * Handles API errors and provides human-readable messages
      */
     protected handleError(error: unknown): never {
-        const axiosError = error as AxiosError<{ error?: string } | string>;
         const clientName = this.constructor.name.replace("Client", "");
-        const requestUrl = this.getRequestUrl(axiosError);
 
         if (!axios.isAxiosError(error)) {
             throw new NoTraceError(`${clientName}: An unexpected error occurred: ${error}`);
         }
+
+        const axiosError = error as AxiosError<{ error?: string } | string>;
+        const requestUrl = this.getRequestUrl(axiosError);
 
         // Handle API error responses with JSON error messages
         if (axiosError.response?.data) {
