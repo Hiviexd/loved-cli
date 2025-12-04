@@ -25,8 +25,11 @@ export type {
     PollStartResponseData,
     PollEndForumResponseData,
     PollEndChatResponseData,
+    TopicInfo,
+    TopicsResponseData,
     MessageResponse,
     PollStartResponse,
     PollEndForumResponse,
     PollEndChatResponse,
+    TopicsResponse,
 } from "./admin-api";

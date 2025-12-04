@@ -13,12 +13,23 @@ export interface Nomination {
     nominators: User[];
     description: string | null;
     description_author: User | null;
+    description_author_id: number;
     description_state: number;
     game_mode: Ruleset;
-    overwrite_artist?: string;
-    overwrite_title?: string;
+    overwrite_artist?: string | null;
+    overwrite_title?: string | null;
     parent_id: number | null;
     poll?: Poll;
+    category: string | null;
+    creators_state: number;
+    difficulties_set: boolean;
+    metadata_state: number;
+    moderator_state: number;
+    order: number;
+    round_id: number;
+    metadata_assignees: User[];
+    moderator_assignees: User[];
+    news_editor_assignees: User[];
 }
 
 /**
@@ -47,9 +58,10 @@ export interface RoundInfo {
     nominations: Nomination[];
     outro: string;
     postTime: Date;
-    resultsPostIds: Record<number, number>;
+    resultsPostIds: Record<number, number | null>;
     title: string;
     video: string | null;
+
     // Added during processing
     postDateString?: string;
     postTimeString?: string;
