@@ -7,8 +7,8 @@ export type { User, Beatmap, Beatmapset, Poll } from "./osu";
 // Export loved.sh API types
 export type { Nomination, GameModeExtraInfo, RoundInfo } from "./loved";
 
-// Export common/utility types
-export type { DiscordEmbed, TokenCache } from "./common";
+// Export Discord types
+export type { DiscordEmbed, DiscordAuthor, DiscordField } from "./discord";
 
 // Export admin.loved.sh API types
 export type {

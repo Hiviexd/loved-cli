@@ -37,7 +37,7 @@ export interface GameModeExtraInfo {
  */
 export interface RoundInfo {
     allNominations: Nomination[];
-    discordWebhooks: Record<number, string>;
+    discordWebhooks: string[];
     extraGameModeInfo: Record<number, GameModeExtraInfo>;
     intro: string;
     introPreview: string;
