@@ -6,7 +6,6 @@ import { z } from "zod";
  * Schema for application configuration
  */
 const ConfigSchema = z.object({
-    bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
     lovedWebApiKey: z.string().min(1, "loved.sh API key is required"),
     lovedWebBaseUrl: z.url("lovedWebBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
     lovedAdminApiKey: z.string().min(1, "loved.sh admin API key is required"),
@@ -14,6 +13,11 @@ const ConfigSchema = z.object({
     lovedRoundId: z.number().int().positive("lovedRoundId must be a positive integer"),
     osuBaseUrl: z.url("osuBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
     osuWikiPath: z.string().default(""),
+    bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
+    webhookOverrides: z.array(z.object({
+        mode: z.enum(["osu", "taiko", "catch", "mania"]),
+        url: z.url("webhook url must be a valid URL"),
+    })).default([]),
 });
 
 /**
