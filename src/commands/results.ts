@@ -4,12 +4,15 @@ import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
 import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
+import { createPollEndAnnouncement } from "../utils/discord";
+import { LovedWebClient } from "../clients/LovedWebClient";
 
 const log = new Logger("results");
 
 export const resultsCommand = new Command("results")
     .description("Process voting results")
     .option("-r, --round <id>", "Override the round ID from config", parseInt)
+    .option("--force", "Force concluding polls despite timers")
     .option("--skip-discord", "Skip Discord announcements")
     .option("--skip-threads", "Skip forum operations")
     .option("--skip-messages", "Skip chat announcements to mappers")
@@ -23,9 +26,8 @@ export const resultsCommand = new Command("results")
             log,
             {
                 discordOnly: options.discordOnly,
-                forumOnly: options.forumOnly,
-                messagesOnly: options.messagesOnly,
                 threadsOnly: options.threadsOnly,
+                messagesOnly: options.messagesOnly,
             },
             "-only flags"
         );
@@ -35,6 +37,17 @@ export const resultsCommand = new Command("results")
             [options.threadsOnly, options.skipThreads, "--threads-only and --skip-threads"],
             [options.messagesOnly, options.skipMessages, "--messages-only and --skip-messages"],
         ]);
+
+        if (options.force && options.discordOnly) {
+            logAndExit(log, "Cannot use --force with --discord-only (force only applies to forum and chat operations)");
+        }
+
+        if (options.force && options.skipThreads && options.skipMessages) {
+            logAndExit(
+                log,
+                "Cannot use --force with both --skip-threads and --skip-messages (force only applies to forum and chat operations)"
+            );
+        }
 
         if (!options.skipUpdate) {
             await tryUpdate();
@@ -46,35 +59,34 @@ export const resultsCommand = new Command("results")
         const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
 
         if (options.threadsOnly) {
-            await lovedAdmin.endPollsForum(roundId, options.dryRun).catch(logAndExit);
+            await lovedAdmin.endPollsForum(roundId, options.dryRun, options.force).catch(logAndExit);
             return;
         }
 
         if (options.messagesOnly) {
-            await lovedAdmin.endPollsChat(roundId, options.dryRun).catch(logAndExit);
+            await lovedAdmin.endPollsChat(roundId, options.dryRun, options.force).catch(logAndExit);
             return;
         }
 
         if (options.discordOnly) {
-            // TODO: Discord flag handling
-            // const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
-            //const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
+            const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
+            const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
+            await createPollEndAnnouncement(roundInfo).catch(logAndExit);
             return;
         }
 
         if (!options.skipThreads) {
-            await lovedAdmin.endPollsForum(roundId, options.dryRun).catch(logAndExit);
+            await lovedAdmin.endPollsForum(roundId, options.dryRun, options.force).catch(logAndExit);
         }
 
         if (!options.skipMessages) {
-            await lovedAdmin.endPollsChat(roundId, options.dryRun).catch(logAndExit);
+            await lovedAdmin.endPollsChat(roundId, options.dryRun, options.force).catch(logAndExit);
         }
 
-        if (options.discordOnly) {
-            // TODO: Discord flag handling
-            // const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
-            //const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
-            return;
+        if (!options.skipDiscord) {
+            const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
+            const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
+            await createPollEndAnnouncement(roundInfo).catch(logAndExit);
         }
 
         log.success("Done processing voting results");

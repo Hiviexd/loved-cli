@@ -8,6 +8,8 @@ import { EmbedBuilder } from "./discord/EmbedBuilder";
 import { NewsService } from "../services/NewsService";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
 import { logAndExit } from "./logger";
+import { formatPercent } from "./formatting";
+import { writeFile } from "node:fs/promises";
 
 /**
  * Webhook color constants
@@ -25,7 +27,7 @@ const WEBHOOK_COLORS = {
 const USERNAME = "Project Loved";
 const START_MESSAGE =
     "@everyone {{MAP_COUNT}} new maps have been nominated for Loved, check them out and cast your votes!";
-// const END_MESSAGE = "@everyone Results from the polls are in! The maps that passed voting will be moved to Loved soon.";
+const END_MESSAGE = "@everyone Results from the polls are in! The maps that passed voting will be moved to Loved soon.";
 
 /**
  * Get the webhook URL for a given mode.
@@ -138,5 +140,41 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
         }
 
         log.dim().success(`Sent poll start announcements for mode ${mode.shortName}`);
+    }
+}
+
+export async function createPollEndAnnouncement(roundInfo: RoundInfo) {
+    const config = await loadConfig();
+
+    // write round info to a json file
+    await writeFile(`round-info-.json`, JSON.stringify(roundInfo, null, 2));
+
+    // Parse through each mode
+    for (const mode of Ruleset.all()) {
+        const webhookUrl = getWebhookUrl(mode, config, roundInfo.discordWebhooks);
+
+        const filteredNominations = roundInfo.nominations.filter((n) => n.game_mode.id === mode.id);
+
+        if (filteredNominations.length === 0) {
+            log.warning(`No nominations found for mode ${mode.shortName}, skipping...`);
+            continue;
+        }
+
+        const webhook = new WebhookBuilder().setWebhookUrl(webhookUrl).setUsername(USERNAME).setMessage(END_MESSAGE);
+
+        for (const nomination of filteredNominations) {
+            const description = `**${formatPercent(nomination.poll?.yesRatio ?? 0)}** — ${nomination.poll?.result_yes ?? 0}:${nomination.poll?.result_no ?? 0}`;
+            const embed = new EmbedBuilder()
+                .setTitle(`${nomination.poll?.passed ? "💚" : "💔"} ${nomination.beatmapset.artist} - ${nomination.beatmapset.title}`)
+                .setUrl(`https://osu.ppy.sh/beatmapsets/${nomination.beatmapset.id}`)
+                .setDescription(description)
+                .setColor(nomination.poll?.passed ? WEBHOOK_COLORS.green : WEBHOOK_COLORS.red);
+
+            webhook.addEmbed(embed);
+        }
+
+        await webhook.sendChunked();
+
+        log.dim().success(`Sent poll end announcements for mode ${mode.shortName}`);
     }
 }
