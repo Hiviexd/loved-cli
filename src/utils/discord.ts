@@ -132,7 +132,7 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
             const videoWebhook = new WebhookBuilder()
                 .setWebhookUrl(webhookUrl)
                 .setUsername(USERNAME)
-                .setMessage(`[video preview](${video})`);
+                .setMessage(`[Video Preview](${video})`);
 
             await videoWebhook.send();
         }
