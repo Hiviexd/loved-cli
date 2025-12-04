@@ -3,18 +3,9 @@ import chalk from "chalk";
 import { z } from "zod";
 
 /**
- * Schema for bot API client credentials
- */
-const BotApiClientSchema = z.object({
-    id: z.string().min(1, "Bot API client ID is required"),
-    secret: z.string().min(1, "Bot API client secret is required"),
-});
-
-/**
  * Schema for application configuration
  */
 const ConfigSchema = z.object({
-    botApiClient: BotApiClientSchema,
     bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
     lovedWebApiKey: z.string().min(1, "loved.sh API key is required"),
     lovedWebBaseUrl: z.url("lovedWebBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
@@ -26,27 +17,9 @@ const ConfigSchema = z.object({
 });
 
 /**
- * Schema for Discord messages
- */
-export const MessagesSchema = z.object({
-    discordPost: z.string(),
-    discordResults: z.string(),
-});
-
-/**
- * Default messages used in Discord posts
- */
-const defaultMessages = {
-    discordPost: "@everyone {{MAP_COUNT}} new maps have been nominated for Loved, check them out and cast your votes!",
-    discordResults: "@everyone Results from the polls are in! The maps that passed voting will be moved to Loved soon.",
-} satisfies z.infer<typeof MessagesSchema>;
-
-/**
- * Full config type including messages
+ * Full config type
  */
 export type Config = z.infer<typeof ConfigSchema>;
-export type Messages = z.infer<typeof MessagesSchema>;
-export type LoadedConfig = Config & { messages: Messages };
 
 /**
  * Formats zod errors into readable messages
@@ -61,7 +34,7 @@ function formatZodErrors(error: z.ZodError): string[] {
 /**
  * Loads and validates the configuration from config/config.json
  */
-export async function loadConfig(): Promise<LoadedConfig> {
+export async function loadConfig(): Promise<Config> {
     let rawConfig: unknown;
 
     try {
@@ -88,8 +61,5 @@ export async function loadConfig(): Promise<LoadedConfig> {
         process.exit(1);
     }
 
-    return {
-        ...result.data,
-        messages: defaultMessages,
-    };
+    return result.data;
 }
