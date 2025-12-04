@@ -22,3 +22,13 @@ export function getYearMonthDay(): string {
 export function getHourMinuteSecond(): string {
     return new Date().toISOString().slice(11, 19).replace(/:/g, "-");
 }
+
+/**
+ * Parses a hex color string to a number
+ */
+export function hexToNumber(color: string): number {
+    if (color.startsWith("#")) {
+        color = color.substring(1);
+    }
+    return parseInt(color, 16);
+}
