@@ -20,6 +20,9 @@ export interface DiscordEmbed {
     image? : {
         url: string;
     };
+    thumbnail?: {
+        url: string;
+    };
     video?: {
         url: string;
     };
