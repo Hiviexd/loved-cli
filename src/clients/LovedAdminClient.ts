@@ -1,5 +1,11 @@
 import { BaseApiClient } from "./BaseApiClient";
-import type { MessageResponse, PollStartResponse, PollEndForumResponse, PollEndChatResponse } from "../models/types";
+import type {
+    MessageResponse,
+    PollStartResponse,
+    PollEndForumResponse,
+    PollEndChatResponse,
+    TopicsResponse,
+} from "../models/types";
 import { Logger } from "../utils/logger";
 import { exportDryRun } from "../utils/dry-runs";
 
@@ -155,6 +161,20 @@ export class LovedAdminClient extends BaseApiClient {
                 exportDryRun("poll-end-chat", response.data);
             }
 
+            return response.data;
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+
+    /**
+     * Gets topics for a round
+     * @param roundId The ID of the round to get topics for
+     * @endpoint `GET` `/rounds/:roundId/topics`
+     */
+    public async getModeTopics(roundId: number): Promise<TopicsResponse> {
+        try {
+            const response = await this.api.get(`/rounds/${roundId}/topics`);
             return response.data;
         } catch (error) {
             this.handleError(error);
