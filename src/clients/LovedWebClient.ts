@@ -22,7 +22,7 @@ export class LovedWebClient extends BaseApiClient {
     /**
      * Fetches round information including nominations and metadata
      */
-    async getRoundInfo(roundId: number): Promise<RoundInfo> {
+    public async getRoundInfo(roundId: number): Promise<RoundInfo> {
         try {
             const response = await this.api.get("/data", { params: { roundId } });
             const {
@@ -122,62 +122,10 @@ export class LovedWebClient extends BaseApiClient {
     /**
      * Gets topic IDs for nominations in a round
      */
-    async getRoundTopicIds(roundId: number): Promise<Record<number, number>> {
+    public async getRoundTopicIds(roundId: number): Promise<Record<number, number>> {
         try {
             const response = await this.api.get("/topic-ids", { params: { roundId } });
             return response.data;
-        } catch (error) {
-            this.handleError(error);
-        }
-    }
-
-    /**
-     * Gets available rounds
-     */
-    async getRoundsAvailable(): Promise<Array<{ id: number; name: string }>> {
-        try {
-            const response = await this.api.get("/rounds-available");
-            return response.data;
-        } catch (error) {
-            this.handleError(error);
-        }
-    }
-
-    /**
-     * Creates forum polls for a round
-     */
-    async createPolls(
-        roundId: number,
-        mainTopicBodies: Record<number, string>,
-        nominationTopicBodies: Record<number, string>
-    ): Promise<{
-        mainTopicIds: number[];
-        mainTopicIdsMap: Record<number, number>;
-        nominationTopicIds: Record<number, number>;
-    }> {
-        log.info("Creating forum polls");
-        log.info("This may take a few minutes...");
-
-        try {
-            const response = await this.api.post("/news", {
-                mainTopicBodies,
-                nominationTopicBodies,
-                roundId,
-            });
-            return response.data;
-        } catch (error) {
-            this.handleError(error);
-        }
-    }
-    /**
-     * Posts voting results for a round
-     */
-    async postResults(roundId: number, mainTopicIds: Record<number, number>): Promise<void> {
-        log.info("Posting replies to forum");
-        log.info("This may take a few minutes...");
-
-        try {
-            await this.api.post("/results", { mainTopicIds, roundId });
         } catch (error) {
             this.handleError(error);
         }
