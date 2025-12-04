@@ -25,7 +25,7 @@ const WEBHOOK_COLORS = {
 const USERNAME = "Project Loved";
 const START_MESSAGE =
     "@everyone {{MAP_COUNT}} new maps have been nominated for Loved, check them out and cast your votes!";
-const END_MESSAGE = "@everyone Results from the polls are in! The maps that passed voting will be moved to Loved soon.";
+// const END_MESSAGE = "@everyone Results from the polls are in! The maps that passed voting will be moved to Loved soon.";
 
 /**
  * Get the webhook URL for a given mode.
@@ -46,6 +46,11 @@ const getWebhookUrl = (mode: Ruleset, config: Config, discordWebhooks: string[])
 const log = new Logger("discord");
 
 export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminClient: LovedAdminClient) {
+    // Abort if any nomination is missing a poll
+    if (roundInfo.nominations.some((n) => n.poll == null)) {
+        logAndExit(log, "One or more nominations are missing a poll! Make sure threads have been created properly.");
+    }
+
     const config = await loadConfig();
     const modeTopicsResponse = await adminClient.getModeTopics(roundInfo.allNominations[0].round_id).catch(logAndExit);
 
