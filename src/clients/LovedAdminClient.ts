@@ -46,6 +46,7 @@ export class LovedAdminClient extends BaseApiClient {
             log.dim().info(`Executing POST /rounds/${roundId}/messages with options:`);
             log.dim().info(`dry_run: ${dryRun}`);
             log.dim().info(`poll_start_guess: ${pollStartGuess}`);
+
             const response = await this.api.post(`/rounds/${roundId}/messages`, {
                 dry_run: dryRun,
                 poll_start_guess: pollStartGuess,
