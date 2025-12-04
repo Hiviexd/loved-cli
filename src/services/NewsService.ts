@@ -1,27 +1,17 @@
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import chalk from "chalk";
-import { OsuApiService } from "./OsuApiService";
-import { LovedWebClient } from "../clients/LovedWebClient";
 import { BannerService } from "./BannerService";
 import { TemplateService } from "./TemplateService";
 import Ruleset from "../models/Ruleset";
 import type { Nomination, RoundInfo, Beatmapset, Beatmap } from "../models/types";
-import { Logger, logAndExit, NoTraceError } from "../utils/logger";
-import {
-    convertToMarkdown,
-    escapeMarkdown,
-    expandBbcodeRootLinks,
-    joinList,
-    maxOf,
-    minOf,
-    videoHtml,
-} from "../utils/index";
+import { Logger, NoTraceError } from "../utils/logger";
+import { convertToMarkdown, escapeMarkdown, joinList, maxOf, minOf, videoHtml } from "../utils/index";
 
 const log = new Logger("news");
 
 /**
- * Service for generating news posts, banners, and forum topics
+ * Service for generating news posts and banners
  */
 export class NewsService {
     /**
@@ -174,11 +164,13 @@ export class NewsService {
                     bannerTitleOverrides[beatmapset.id] ?? beatmapset.title
                 )
                     .then((generatedBanners) =>
-                        log.dim().success(
-                            `${generatedBanners ? "Created" : "Using cached"} banners for ${chalk.underline(
-                                beatmapset.title
-                            )} [#${beatmapset.id}]`
-                        )
+                        log
+                            .dim()
+                            .success(
+                                `${generatedBanners ? "Created" : "Using cached"} banners for ${chalk.underline(
+                                    beatmapset.title
+                                )} [#${beatmapset.id}]`
+                            )
                     )
                     .catch((error) => {
                         console.error(
@@ -190,120 +182,6 @@ export class NewsService {
                         throw new NoTraceError();
                     })
             )
-        );
-    }
-
-    /**
-     * Generates forum topics for the round
-     */
-    public static async generateTopics(
-        lovedWeb: LovedWebClient,
-        osuApi: OsuApiService,
-        roundInfo: RoundInfo,
-        roundId: number,
-        dryRun: boolean
-    ): Promise<void> {
-        log.info("Generating forum topics");
-
-        let error = false;
-
-        for (const nomination of roundInfo.allNominations) {
-            if (nomination.description == null) {
-                log.error(new Error(`Missing description for nomination #${nomination.id}`));
-                error = true;
-            }
-            if (nomination.beatmapset_creators.length === 0) {
-                log.error(new Error(`Missing creators for nomination #${nomination.id}`));
-                error = true;
-            }
-        }
-
-        if (error) {
-            logAndExit(new NoTraceError());
-        }
-
-        // Load templates
-        const mainTopicTemplate = await TemplateService.loadTemplate("main-thread-template.bbcode");
-        const mainTopicBeatmapsetTemplate = await TemplateService.loadTemplate("main-thread-template-beatmap.bbcode");
-        const votingPostTemplate = await TemplateService.loadTemplate("voting-thread-template.bbcode");
-
-        const mainTopicBodies: Record<number, string> = {};
-        const nominationTopicBodies: Record<number, string> = {};
-
-        for (const gameMode of Ruleset.all()) {
-            const extraInfo = roundInfo.extraGameModeInfo[gameMode.id];
-            const mainTopicBeatmapsets: string[] = [];
-            const mainTopicTitle = `[${gameMode.longName}] ${roundInfo.title}`;
-            const nominationsForMode = roundInfo.allNominations.filter((n) => n.game_mode.id === gameMode.id);
-
-            if (nominationsForMode.length === 0) continue;
-
-            for (const nomination of nominationsForMode) {
-                const beatmapset = nomination.beatmapset;
-                const artistAndTitle = `${beatmapset.artist} - ${beatmapset.title}`;
-                const creatorsBbcode = joinList(
-                    nomination.beatmapset_creators.map((c) =>
-                        c.id >= 4294000000 ? c.name : `[url=https://osu.ppy.sh/users/${c.id}]${c.name}[/url]`
-                    )
-                );
-
-                mainTopicBeatmapsets.push(
-                    TemplateService.render(mainTopicBeatmapsetTemplate, {
-                        BEATMAPSET: artistAndTitle,
-                        BEATMAPSET_ID: beatmapset.id,
-                        CREATORS: creatorsBbcode,
-                        LINK_MODE: gameMode.linkName,
-                        TOPIC_ID: `{{${nomination.id}_TOPIC_ID}}`,
-                    })
-                );
-
-                nominationTopicBodies[nomination.id] = TemplateService.render(votingPostTemplate, {
-                    BEATMAPSET: artistAndTitle,
-                    BEATMAPSET_EXTRAS: NewsService.getExtraBeatmapsetInfo(nomination),
-                    BEATMAPSET_ID: beatmapset.id,
-                    CAPTAIN: nomination.description_author?.name ?? "Unknown",
-                    CAPTAIN_ID: nomination.description_author?.id ?? 0,
-                    CREATORS: creatorsBbcode,
-                    DESCRIPTION: expandBbcodeRootLinks(nomination.description ?? ""),
-                    LINK_MODE: gameMode.linkName,
-                    MAIN_TOPIC_TITLE: mainTopicTitle,
-                });
-            }
-
-            mainTopicBodies[gameMode.id] = TemplateService.render(mainTopicTemplate, {
-                BEATMAPS: mainTopicBeatmapsets.join("\n\n"),
-                CAPTAINS: joinList(
-                    extraInfo.nominators.map((n) => `[url=https://osu.ppy.sh/users/${n.id}]${n.name}[/url]`)
-                ),
-                GAME_MODE_LINK_NAME: gameMode.linkName,
-                RESULTS_POST: `https://osu.ppy.sh/community/forums/posts/${roundInfo.resultsPostIds[gameMode.id]}`,
-                THRESHOLD: extraInfo.thresholdFormatted,
-            });
-        }
-
-        if (dryRun) {
-            console.log(chalk.yellow("\n[DRY RUN] Would create forum topics"));
-            console.log(chalk.dim(`Main topics for ${Object.keys(mainTopicBodies).length} modes`));
-            console.log(chalk.dim(`Nomination topics for ${Object.keys(nominationTopicBodies).length} nominations`));
-            return;
-        }
-
-        const { mainTopicIds, nominationTopicIds } = await lovedWeb.createPolls(
-            roundId,
-            mainTopicBodies,
-            nominationTopicBodies
-        );
-
-        log.info("Pinning main topics");
-        await Promise.all(mainTopicIds.map((topicId) => osuApi.pinTopic(topicId, 2)));
-
-        log.info("Uploading topic covers");
-        await Promise.all(
-            roundInfo.allNominations.map((nomination) => {
-                if (nomination.beatmapset.bgPath != null) {
-                    return osuApi.storeTopicCover(nomination.beatmapset.bgPath, nominationTopicIds[nomination.id]);
-                }
-            })
         );
     }
 
