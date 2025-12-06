@@ -22,10 +22,12 @@ export class NewsService {
      * @param nomination The nomination to extract diff names from
      * @returns Object with diffNames array and reverseExclude flag
      */
-    public static getHighlightedDiffNames(nomination: Nomination, options?: { bracketed: boolean }): {
+    public static getHighlightedDiffNames(
+        nomination: Nomination,
+        options?: { bracketed: boolean }
+    ): {
         diffNames: string[];
         reverseExclude: boolean;
-        
     } {
         const beatmapsForMode = nomination.beatmaps.filter((b) => b.game_mode === nomination.game_mode.id);
         const diffNames: string[] = [];
@@ -175,8 +177,6 @@ export class NewsService {
         beatmapsets: Beatmapset[],
         bannerTitleOverrides: Record<string, string>
     ): Promise<void> {
-        log.info("Generating beatmapset banners");
-
         await mkdir(bannersPath, { recursive: true });
 
         await Promise.all(
