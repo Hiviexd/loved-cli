@@ -55,6 +55,7 @@ export const newsCommand = new Command("news")
         const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
 
         if (options.discordOnly) {
+            log.info("Posting Discord announcements...");
             await createPollStartAnnouncement(roundInfo, lovedAdmin).catch(logAndExit);
             log.success("Done posting Discord announcements");
             return;
@@ -85,6 +86,8 @@ export const newsCommand = new Command("news")
 
         // Generate banners
         if (!options.skipBanners) {
+            log.info("Generating beatmapset banners");
+
             await NewsService.generateBanners(
                 join(config.osuWikiPath, `wiki/shared/news/${extendedRoundInfo.newsDirname}`),
                 beatmapsets,
@@ -104,7 +107,9 @@ export const newsCommand = new Command("news")
 
         // Post Discord announcements (after threads are created so poll URLs are available)
         if (!options.skipDiscord) {
-            await createPollStartAnnouncement(roundInfo, lovedAdmin).catch(logAndExit);
+            log.info("Posting Discord announcements...");
+            const refreshedRoundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
+            await createPollStartAnnouncement(refreshedRoundInfo, lovedAdmin).catch(logAndExit);
         }
 
         // Generate news post
