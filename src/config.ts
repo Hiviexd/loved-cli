@@ -13,6 +13,7 @@ const ConfigSchema = z.object({
     lovedRoundId: z.number().int().positive("lovedRoundId must be a positive integer"),
     osuBaseUrl: z.url("osuBaseUrl must be a valid URL").transform((url) => url.replace(/\/+$/, "")),
     osuWikiPath: z.string().default(""),
+    updates: z.boolean().default(true),
     bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
     webhookOverrides: z.array(z.object({
         mode: z.enum(["osu", "taiko", "catch", "mania"]),

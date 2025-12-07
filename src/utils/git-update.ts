@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { platform } from "node:process";
 import { Logger } from "./logger";
+import { loadConfig } from "../config";
 
 const log = new Logger("git-update");
 
@@ -12,6 +13,13 @@ const updateCachePath = "config/update-cache";
  * @param force - Force check even if recently checked
  */
 export async function tryUpdate(force = false): Promise<void> {
+    const config = await loadConfig();
+
+    if (!config.updates) {
+        log.dim().info("Skipping update check: disabled in config");
+        return;
+    }
+
     // Don't check for updates more than once every 6 hours
     if (!force) {
         const updateCache = await readFile(updateCachePath, "utf8").catch(() => "0");
@@ -32,8 +40,8 @@ export async function tryUpdate(force = false): Promise<void> {
     }
 
     // Check repository status
-    if (spawnSync("git", ["symbolic-ref", "--short", "HEAD"]).stdout.toString().trim() !== "master") {
-        log.warning("Skipping update check: branch not set to master");
+    if (spawnSync("git", ["symbolic-ref", "--short", "HEAD"]).stdout.toString().trim() !== "main") {
+        log.warning("Skipping update check: branch not set to main");
         return;
     }
 
@@ -43,7 +51,7 @@ export async function tryUpdate(force = false): Promise<void> {
     }
 
     // Check for and apply updates
-    log.info("Checking for updates");
+    log.info("Checking for updates...");
 
     spawnSync("git", ["fetch", "--quiet"]);
     const update = spawnSync("git", ["diff", "--quiet", "..FETCH_HEAD"]).status === 1;
