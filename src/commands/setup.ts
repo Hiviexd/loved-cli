@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { Logger } from "../utils/logger";
 import { Config } from "../config";
 import { prompt } from "../utils/cli";
+import chalk from "chalk";
 
 const log = new Logger("setup");
 
@@ -18,6 +19,7 @@ async function loadExistingConfig(): Promise<Config> {
         lovedRoundId: 0,
         osuBaseUrl: "https://osu.ppy.sh",
         osuWikiPath: "",
+        updates: true,
         bannerTitleOverrides: {} satisfies Record<string, string>,
         webhookOverrides: [] satisfies { mode: string; url: string }[],
     };
@@ -44,52 +46,51 @@ export const setupCommand = new Command("setup")
         log.info("📋 Project Loved Configuration Setup");
         log.dim().info("Press Enter to keep existing value or skip");
         log.dim().info("You can edit these anytime in config/config.json");
-        log.dim().info("--------------------------------");
-        log.dim().info("For lovedRoundId, set it manually every round\n");
+        log.dim().info("You may also create a config.json manually from config/config.example.json\n");
 
         // loved.sh API
-        log.warning("─── loved.sh API (get the key from loved.sh) ───");
-        const lovedWebApiKey = await prompt("loved.sh API Key", {
+        const lovedWebApiKey = await prompt(chalk.yellow("loved.sh API Key (get the key from loved.sh)"), {
             defaultValue: existing.lovedWebApiKey || undefined,
             showSkipHint: true,
         });
-        const lovedWebBaseUrl = await prompt("loved.sh Base URL", {
-            defaultValue: existing.lovedWebBaseUrl,
-            showSkipHint: true,
-        });
 
-        log.warning("─── loved.sh Admin API (ask Hivie or Irisu for a key) ───");
-        const lovedAdminApiKey = await prompt("loved.sh Admin API Key", {
+        const lovedAdminApiKey = await prompt(chalk.yellow("loved.sh Admin API Key (ask Hivie or Irisu for a key)"), {
             defaultValue: existing.lovedAdminApiKey || undefined,
             showSkipHint: true,
         });
-        const lovedAdminBaseUrl = await prompt("loved.sh Admin Base URL", {
-            defaultValue: existing.lovedAdminBaseUrl,
-            showSkipHint: true,
-        });
 
-        // Paths
-        log.warning("─── Paths ───");
-        const osuWikiPath = await prompt("osu-wiki repository path", {
+        const osuWikiPath = await prompt(chalk.yellow("osu-wiki repository path"), {
             defaultValue: existing.osuWikiPath || undefined,
             showSkipHint: true,
         });
 
+        const lovedRoundId = await prompt(chalk.yellow("loved round ID (must update manually every round)"), {
+            defaultValue: existing.lovedRoundId.toString() || undefined,
+            showSkipHint: true,
+        });
+
+        const updatesValue = await prompt(chalk.yellow("Enable automatic Git update checks (true/false)"), {
+            defaultValue: existing.updates ? "true" : "false",
+            showSkipHint: true,
+        });
+        const updates = updatesValue === "true";
+
         // Build config
         const config: Config = {
             lovedWebApiKey,
-            lovedWebBaseUrl,
+            lovedWebBaseUrl: existing.lovedWebBaseUrl,
             lovedAdminApiKey,
-            lovedAdminBaseUrl,
-            lovedRoundId: existing.lovedRoundId,
+            lovedAdminBaseUrl: existing.lovedAdminBaseUrl,
+            lovedRoundId: parseInt(lovedRoundId, 10),
             osuBaseUrl: existing.osuBaseUrl,
             osuWikiPath,
+            updates,
             bannerTitleOverrides: existing.bannerTitleOverrides,
             webhookOverrides: existing.webhookOverrides,
         };
 
         // Write config
-        await writeFile("config/config.json", JSON.stringify(config, null, 2) + "\n");
+        await writeFile("config/config.json", JSON.stringify(config, null, 4) + "\n");
 
         log.success("✓ Configuration saved to config/config.json");
 
@@ -99,8 +100,8 @@ export const setupCommand = new Command("setup")
         if (!config.lovedAdminBaseUrl) warnings.push("lovedAdminBaseUrl");
         if (!config.lovedWebApiKey) warnings.push("lovedWebApiKey");
         if (!config.lovedWebBaseUrl) warnings.push("lovedWebBaseUrl");
-        if (!config.lovedRoundId) warnings.push("lovedRoundId (set manually every round)");
         if (!config.osuWikiPath) warnings.push("osuWikiPath");
+        if (!config.lovedRoundId) warnings.push("lovedRoundId");
 
         if (warnings.length > 0) {
             log.warning(`⚠ Missing required fields: ${warnings.join(", ")}`);
