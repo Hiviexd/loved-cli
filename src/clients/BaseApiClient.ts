@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { NoTraceError } from "../utils/logger";
+import chalk from "chalk";
 
 export abstract class BaseApiClient {
     /**
@@ -52,10 +53,10 @@ export abstract class BaseApiClient {
      * Handles API errors and provides human-readable messages
      */
     protected handleError(error: unknown): never {
-        const clientName = this.constructor.name.replace("Client", "");
+        const clientName = chalk.cyanBright(`[${this.constructor.name}]`);
 
         if (!axios.isAxiosError(error)) {
-            throw new NoTraceError(`${clientName}: An unexpected error occurred: ${error}`);
+            throw new NoTraceError(`${clientName} An unexpected error occurred: ${error}`);
         }
 
         const axiosError = error as AxiosError<{ error?: string } | string>;
@@ -67,19 +68,19 @@ export abstract class BaseApiClient {
 
             // Check if it's a structured error response
             if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string") {
-                throw new NoTraceError(`${clientName}: ${data.error}`);
+                throw new NoTraceError(`${clientName} ${data.error}`);
             }
 
             // Check if response is HTML (like Cloudflare error pages)
             if (this.isHtmlResponse(data)) {
                 const status = axiosError.response.status;
                 const statusMessage = this.getStatusMessage(status, requestUrl);
-                throw new NoTraceError(`${clientName}: ${statusMessage}`);
+                throw new NoTraceError(`${clientName} ${statusMessage}`);
             }
 
             // Handle string error responses
             if (typeof data === "string" && data.length < 200) {
-                throw new NoTraceError(`${clientName}: ${data}`);
+                throw new NoTraceError(`${clientName} ${data}`);
             }
         }
 
@@ -88,35 +89,35 @@ export abstract class BaseApiClient {
             const status = axiosError.response.status;
             const data = axiosError.response.data;
             const statusMessage = this.getStatusMessage(status, requestUrl);
-            throw new NoTraceError(`${clientName}: ${statusMessage}\n${JSON.stringify(data, null, 2)}`);
+            throw new NoTraceError(`${clientName} ${statusMessage}\n${JSON.stringify(data, null, 2)}`);
         }
 
         // Handle network errors
         if (axiosError.code === "ECONNREFUSED") {
-            throw new NoTraceError(`${clientName}: Connection refused - The server is not reachable (${requestUrl})`);
+            throw new NoTraceError(`${clientName} Connection refused - The server is not reachable (${requestUrl})`);
         }
 
         if (axiosError.code === "ENOTFOUND") {
-            throw new NoTraceError(`${clientName}: DNS lookup failed - Could not resolve hostname (${requestUrl})`);
+            throw new NoTraceError(`${clientName} DNS lookup failed - Could not resolve hostname (${requestUrl})`);
         }
 
         if (axiosError.code === "ETIMEDOUT" || axiosError.code === "ECONNABORTED") {
             throw new NoTraceError(
-                `${clientName}: Request timeout - The server did not respond in time (${requestUrl})`
+                `${clientName} Request timeout - The server did not respond in time (${requestUrl})`
             );
         }
 
         if (axiosError.code === "ERR_NETWORK") {
-            throw new NoTraceError(`${clientName}: Network error - Unable to connect to the server (${requestUrl})`);
+            throw new NoTraceError(`${clientName} Network error - Unable to connect to the server (${requestUrl})`);
         }
 
         // Fallback for other axios errors
         if (axiosError.message) {
-            throw new NoTraceError(`${clientName}: ${axiosError.message} (${requestUrl})`);
+            throw new NoTraceError(`${clientName} ${axiosError.message} (${requestUrl})`);
         }
 
         // Final fallback
-        throw new NoTraceError(`${clientName}: An unexpected error occurred (${requestUrl})`);
+        throw new NoTraceError(`${clientName} An unexpected error occurred (${requestUrl})`);
     }
 
     /**
