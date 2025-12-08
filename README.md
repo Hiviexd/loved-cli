@@ -2,16 +2,20 @@
 
 A command-line tool for managing [Project Loved](https://osu.ppy.sh/wiki/en/Community/Project_Loved) operations including news generation, forum thread management, mapper notifications, and voting results processing.
 
+This project is the successor to clayton's [Project Loved CLI](https://github.com/cl8n/project-loved), rewritten with safety, flexibility, and code readability in mind.
+
 ## Requirements
 
-- Node.js 18+
-- pnpm
-- Git (for auto-updates)
+- Node.js >= 18 (developed with 22.19.0)
+- pnpm (npm install -g pnpm)
+
+### Recommended
+
+- Node Version Manager (nvm) or nvm-windows
 
 ## Installation
 
 ```bash
-cd rewrite
 pnpm install
 ```
 
@@ -23,278 +27,120 @@ Run the interactive setup to configure the application:
 pnpm loved setup
 ```
 
-This will prompt you for:
-- **Bot API Client ID/Secret** - osu! API credentials (ask Hivie)
+This will prompt you for the following required fields:
+
 - **loved.sh API Key** - API key from loved.sh
-- **loved.sh Base URL** - defaults to `https://loved.sh`
+- **loved.sh Admin API Key** - API key provided to admins directly (ask Hivie)
 - **osu-wiki repository path** - local path to your osu-wiki fork
+- **loved round ID** - the current Loved round ID (must update manually every round)
+- **Enable automatic Git update checks** - whether to check for script updates automatically
 
 The configuration is stored in `config/config.json`. You can also edit this file directly.
 
 ### Configuration Fields
 
-| Field | Description | Required |
-|-------|-------------|----------|
-| `botApiClient.id` | osu! bot API client ID | Yes |
-| `botApiClient.secret` | osu! bot API client secret | Yes |
-| `lovedWebApiKey` | loved.sh API key | Yes |
-| `lovedWebBaseUrl` | loved.sh base URL | No (default: `https://loved.sh`) |
-| `lovedRoundId` | Current round ID | Yes (set manually each round) |
-| `osuBaseUrl` | osu! base URL | No (default: `https://osu.ppy.sh`) |
-| `osuWikiPath` | Path to osu-wiki repository | Yes (for news generation) |
-| `bannerTitleOverrides` | Custom banner titles by beatmapset ID | No |
+| Field | Description | Required | Default |
+|-------|-------------|----------|----------|
+| `lovedWebApiKey` | loved.sh API key | ✅ | - |
+| `lovedWebBaseUrl` | loved.sh base URL | ✅ | `https://loved.sh` |
+| `lovedAdminApiKey` | loved.sh admin API key | ✅ | - |
+| `lovedAdminBaseUrl` | loved.sh admin base URL | ✅ | `https://admin.loved.sh` |
+| `lovedRoundId` | Current round ID | ✅ | - |
+| `osuBaseUrl` | osu! base URL | ✅ | `https://osu.ppy.sh` |
+| `osuWikiPath` | Path to osu-wiki repository | ✅ | - |
+| `updates` | Enable automatic Git update checks | ✅ | `true` |
+| `bannerTitleOverrides` | Custom banner titles by beatmapset ID | ❌ | - |
+| `webhookOverrides` | Custom webhook URLs by mode | ❌ | - |
+
+`bannerTitleOverrides` is an object of key-value pairs, where the key is the beatmapset ID and the value is the banner title.
+
+```json
+{
+    "524026": "Custom Banner Title",
+    "396221": "Another Custom Title"
+}
+```
+
+`webhookOverrides` is an array of objects, where each object has a `mode` property (one of `osu`, `taiko`, `catch`, `mania`) and a `url` property. (see `config/config.example.json` for an example)
 
 ## Usage
 
 ```bash
-# Run with pnpm
 pnpm loved <command> [options]
-
-# Or after building
-pnpm build
-node dist/index.js <command> [options]
 ```
 
-### Global Options
+### Global options
 
-All commands support these options:
-- `-r, --round <id>` - Override the round ID from config
-- `--skip-update` - Skip checking for Git updates
-
----
+- `-h, --help` Show help for a command
+- `-r, --round <id>` Override the round ID from config
+- `--skip-update` Skip automatic Git update check
 
 ## Commands
 
-### `loved setup`
+### setup
 
-Initialize and configure the project interactively.
+`pnpm loved setup`
 
-```bash
-pnpm loved setup
-```
+Interactive wizard that writes `config/config.json`. Prompts for API keys, wiki path, round ID, and whether to enable automatic Git update checks.
 
 ---
 
-### `loved maps download`
+### maps
 
-Download beatmapset background images from osu! for banner generation.
+Beatmapset commands.
 
-```bash
-pnpm loved maps download [options]
-```
-
-Downloads backgrounds to `banners/{roundId}/` directory.
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-r, --round <id>` | Override round ID |
-| `--skip-update` | Skip Git update check |
+- `pnpm loved maps download [options]` — download beatmapset backgrounds to `backgrounds/{roundId}/`.
+  - `-r, --round <id>` Override round ID
+  - `--skip-update` Skip Git update check
+- `pnpm loved maps open [options]` — open all nominated beatmapsets in your browser.
+  - `-r, --round <id>` Override round ID
+  - `--skip-update` Skip Git update check
 
 ---
 
-### `loved maps open`
+### messages
 
-Open all nominated beatmapsets in your default browser.
+`pnpm loved messages [options]`
 
-```bash
-pnpm loved maps open [options]
-```
+Send chat announcements to nominated mappers.
 
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-r, --round <id>` | Override round ID |
-| `--skip-update` | Skip Git update check |
+- `-r, --round <id>` Override round ID
+- `--poll-start <guess>` Provide poll start time and skip the prompt
+- `--dry-run` Preview without sending (outputs the operation logs in `logs/YYYY-MM-DD/HH-MM-SS-messages.json`)
+- `--skip-update` Skip Git update check
 
 ---
 
-### `loved messages`
+### news
 
-Send chat announcements to nominated mappers via osu! chat.
+`pnpm loved news [options]`
 
-```bash
-pnpm loved messages [options]
-```
+Generate banners, news post, and optionally create forum threads / Discord announcements.
 
-Prompts interactively for the poll start time (e.g., "next weekend", "soon").
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-r, --round <id>` | Override round ID |
-| `--poll-start <guess>` | Poll start time (skips prompt) |
-| `--dry-run` | Preview messages without sending |
-| `--skip-update` | Skip Git update check |
-
-**Example:**
-```bash
-# Preview messages
-pnpm loved messages --dry-run
-
-# Send with custom poll start
-pnpm loved messages --poll-start "this Saturday"
-```
+- `-r, --round <id>` Override round ID
+- `--threads` Create forum threads and post Discord announcements
+- `--banners-only` Only generate banners
+- `--discord-only` Only post Discord announcements
+- `--skip-banners` Skip banner generation
+- `--skip-discord` Skip Discord announcements
+- `--dry-run` Preview thread creation (requires `--threads`) (outputs the operation logs in `logs/YYYY-MM-DD/HH-MM-SS-poll-start.json`)
+- `--skip-update` Skip Git update check
 
 ---
 
-### `loved news`
+### results
 
-Generate the news post markdown file and voting banners.
+`pnpm loved results [options]`
 
-```bash
-pnpm loved news [options]
-```
+Process voting results (forum, chat, Discord, and loved.sh state).
 
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-r, --round <id>` | Override round ID |
-| `--threads` | Also create forum threads |
-| `--banners-only` | Only generate banners |
-| `--skip-banners` | Skip banner generation |
-| `--skip-discord` | Skip Discord announcements |
-| `--dry-run` | Preview without making changes |
-| `--skip-update` | Skip Git update check |
-
-**Examples:**
-```bash
-# Generate news and banners
-pnpm loved news
-
-# Only generate banners
-pnpm loved news --banners-only
-
-# Generate news, banners, and create forum threads
-pnpm loved news --threads
-
-# Preview forum thread creation
-pnpm loved news --threads --dry-run
-```
-
-**Output:**
-- News post: `{osuWikiPath}/news/{year}/{date}-{title}.md`
-- Banners: `{osuWikiPath}/wiki/shared/news/{date}-{title}/`
-
----
-
-### `loved results`
-
-Process voting results after polls close.
-
-```bash
-pnpm loved results [options]
-```
-
-This command:
-1. Locks all voting topics
-2. Unpins main topics
-3. Saves poll results to loved.sh
-4. Posts results to Discord
-5. Sends chat notifications to mappers whose maps passed
-6. Removes topic watches
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-r, --round <id>` | Override round ID |
-| `--skip-lock` | Skip locking topics |
-| `--skip-unpin` | Skip unpinning main topics |
-| `--skip-discord` | Skip Discord announcements |
-| `--skip-chat` | Skip chat notifications to mappers |
-| `--skip-unwatch` | Skip removing topic watches |
-| `--lock-only` | Only lock topics |
-| `--discord-only` | Only post Discord results |
-| `--dry-run` | Preview without making changes |
-| `--skip-update` | Skip Git update check |
-
-**Examples:**
-```bash
-# Full results processing
-pnpm loved results
-
-# Preview all actions
-pnpm loved results --dry-run
-
-# Only lock topics
-pnpm loved results --lock-only
-
-# Only post Discord results
-pnpm loved results --discord-only
-
-# Skip Discord and chat notifications
-pnpm loved results --skip-discord --skip-chat
-```
-
----
-
-## Typical Workflow
-
-1. **Set the round ID** in `config/config.json`
-
-2. **Download backgrounds**
-   ```bash
-   pnpm loved maps download
-   ```
-
-3. **Review maps** (optional)
-   ```bash
-   pnpm loved maps open
-   ```
-
-4. **Send mapper notifications**
-   ```bash
-   pnpm loved messages
-   ```
-
-5. **Generate news and forum threads**
-   ```bash
-   pnpm loved news --threads
-   ```
-
-6. **After voting closes, process results**
-   ```bash
-   pnpm loved results
-   ```
-
----
-
-## Development
-
-```bash
-# Run in development mode (with auto-reload)
-pnpm dev
-
-# Build for production
-pnpm build
-
-# Lint code
-pnpm lint
-pnpm lint:fix
-```
-
-## Project Structure
-
-```
-rewrite/
-├── config/
-│   ├── config.example.json
-│   └── config.json
-├── banners/
-│   └── {roundId}/          # Downloaded backgrounds
-├── resources/
-│   └── (templates, fonts)
-├── src/
-│   ├── index.ts            # CLI entry point
-│   ├── config.ts           # Configuration loading (Zod)
-│   ├── commands/           # CLI commands
-│   ├── services/           # API services
-│   ├── models/             # Types and models
-│   └── utils/              # Utility functions
-└── dist/                   # Compiled output
-```
-
-## License
-
-ISC
-
+- `-r, --round <id>` Override round ID
+- `--force` Allow concluding polls despite timers (forum/chat only)
+- `--skip-discord` Skip Discord announcements
+- `--skip-threads` Skip forum operations
+- `--skip-messages` Skip chat announcements
+- `--discord-only` Only post Discord results
+- `--threads-only` Only perform forum operations
+- `--messages-only` Only send chat announcements
+- `--dry-run` Preview without making changes (outputs the operation logs in `logs/YYYY-MM-DD/HH-MM-SS-poll-end.json`)
+- `--skip-update` Skip Git update check
