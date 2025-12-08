@@ -48,7 +48,6 @@ export const setupCommand = new Command("setup")
         log.dim().info("You can edit these anytime in config/config.json");
         log.dim().info("You may also create a config.json manually from config/config.example.json\n");
 
-        // loved.sh API
         const lovedWebApiKey = await prompt(chalk.yellow("loved.sh API Key (get the key from loved.sh)"), {
             defaultValue: existing.lovedWebApiKey || undefined,
             showSkipHint: true,
