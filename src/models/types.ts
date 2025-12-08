@@ -32,4 +32,6 @@ export type {
     PollEndForumResponse,
     PollEndChatResponse,
     TopicsResponse,
+    AdminPermissionGrantResponse,
+    AdminPermissionGrantResponseData,
 } from "./admin-api";

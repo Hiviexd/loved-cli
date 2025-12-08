@@ -4,8 +4,15 @@
 process.env.FORCE_COLOR = "2";
 
 import { Command } from "commander";
-import { setupCommand, mapsCommand, messagesCommand, newsCommand, resultsCommand } from "./commands/index";
-import module from "../package.json"
+import {
+    setupCommand,
+    mapsCommand,
+    messagesCommand,
+    newsCommand,
+    resultsCommand,
+    adminCommand,
+} from "./commands/index";
+import module from "../package.json";
 
 const program = new Command();
 
@@ -16,5 +23,6 @@ program.addCommand(mapsCommand);
 program.addCommand(messagesCommand);
 program.addCommand(newsCommand);
 program.addCommand(resultsCommand);
+program.addCommand(adminCommand);
 
 program.parse();

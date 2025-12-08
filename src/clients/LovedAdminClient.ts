@@ -5,6 +5,7 @@ import type {
     PollEndForumResponse,
     PollEndChatResponse,
     TopicsResponse,
+    AdminPermissionGrantResponse,
 } from "../models/types";
 import { Logger } from "../utils/logger";
 import { exportDryRun } from "../utils/dry-runs";
@@ -175,6 +176,36 @@ export class LovedAdminClient extends BaseApiClient {
     public async getModeTopics(roundId: number): Promise<TopicsResponse> {
         try {
             const response = await this.api.get(`/rounds/${roundId}/topics`);
+            return response.data;
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+
+    /**
+     * Creates an admin API key
+     * @param userId The osu! ID to create an admin API key for
+     * @endpoint `POST` `/admin/key/:userId`
+     */
+    public async createAdminApiKey(userId: number): Promise<AdminPermissionGrantResponse> {
+        try {
+            log.info(`Executing POST /admin/key/${userId}`);
+            const response = await this.api.post(`/admin/key/${userId}`);
+            return response.data;
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+
+    /**
+     * Grants loved.sh web admin permissions to a user
+     * @param userId The osu! ID to grant admin permissions to
+     * @endpoint `POST` `/admin/grant/:userId`
+     */
+    public async grantAdminPermissions(userId: number): Promise<AdminPermissionGrantResponse> {
+        try {
+            log.info(`Executing POST /admin/grant/${userId}`);
+            const response = await this.api.post(`/admin/grant/${userId}`);
             return response.data;
         } catch (error) {
             this.handleError(error);

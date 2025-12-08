@@ -3,6 +3,7 @@
  */
 export interface AdminApiResponse<T = unknown> {
     success: boolean;
+    message?: string;
     data: T;
 }
 
@@ -131,6 +132,18 @@ export interface TopicsResponseData {
 }
 
 /**
+ * Response data for admin permission grant operations
+ */
+export interface AdminPermissionGrantResponseData {
+    user: {
+        id: number;
+        name: string;
+    }
+    token?: string;
+    privileged?: boolean;
+}
+
+/**
  * Typed response for /rounds/:roundId/messages endpoint
  */
 export type MessageResponse = AdminApiResponse<MessageResponseData>;
@@ -154,3 +167,10 @@ export type PollEndChatResponse = AdminApiResponse<PollEndChatResponseData>;
  * Typed response for /rounds/:roundId/topics endpoint
  */
 export type TopicsResponse = AdminApiResponse<TopicsResponseData>;
+
+/**
+ * Typed response for endpoints:
+ * - /admin/key/:userId
+ * - /admin/grant/:userId
+ */
+export type AdminPermissionGrantResponse = AdminApiResponse<AdminPermissionGrantResponseData>;
