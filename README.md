@@ -7,7 +7,7 @@ This project is the successor to clayton's [Project Loved CLI](https://github.co
 ## Requirements
 
 - Node.js >= 18 (developed with 22.19.0)
-- pnpm (npm install -g pnpm)
+- pnpm (`npm install -g pnpm`)
 
 ### Recommended
 
