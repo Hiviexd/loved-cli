@@ -2,6 +2,7 @@
     "name": "project-loved",
     "version": "2.0.0",
     "description": "Project Loved management CLI",
+    "author": "Hiviexd",
     "main": "dist/index.js",
     "bin": {
         "loved": "dist/index.js"
@@ -29,7 +30,7 @@
         "loved",
         "project-loved"
     ],
-    "author": "",
+    "packageManager": "pnpm@10",
     "license": "Apache-2.0",
     "dependencies": {
         "axios": "^1.13.2",
