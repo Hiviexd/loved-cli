@@ -1,5 +1,6 @@
 import { BaseApiClient } from "./BaseApiClient";
 import type {
+    AdminApiResponse,
     MessageResponse,
     PollStartResponse,
     PollEndForumResponse,
@@ -28,10 +29,11 @@ export class LovedAdminClient extends BaseApiClient {
      * @param nominationId The ID of the nomination to delete
      * @endpoint `DELETE` `/nominations/:nominationId`
      */
-    public async deleteNomination(nominationId: number): Promise<void> {
+    public async deleteNomination(nominationId: number): Promise<AdminApiResponse> {
         try {
             log.info(`Executing DELETE /nominations/${nominationId}`);
-            await this.api.delete(`/nominations/${nominationId}`);
+            const response = await this.api.delete(`/nominations/${nominationId}`);
+            return response.data;
         } catch (error) {
             this.handleError(error);
         }

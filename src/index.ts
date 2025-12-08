@@ -11,6 +11,7 @@ import {
     newsCommand,
     resultsCommand,
     adminCommand,
+    nominationsCommand,
 } from "./commands/index";
 import module from "../package.json";
 
@@ -24,5 +25,6 @@ program.addCommand(messagesCommand);
 program.addCommand(newsCommand);
 program.addCommand(resultsCommand);
 program.addCommand(adminCommand);
+program.addCommand(nominationsCommand);
 
 program.parse();
