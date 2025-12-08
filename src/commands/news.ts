@@ -105,8 +105,8 @@ export const newsCommand = new Command("news")
             await lovedAdmin.startPolls(roundId, options.dryRun).catch(logAndExit);
         }
 
-        // Post Discord announcements (after threads are created so poll URLs are available)
-        if (!options.skipDiscord) {
+        // Post Discord announcements (only when threads were created so poll URLs exist; skip on dry-run)
+        if (options.threads && !options.skipDiscord && !options.dryRun) {
             log.info("Posting Discord announcements...");
             const refreshedRoundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
             await createPollStartAnnouncement(refreshedRoundInfo, lovedAdmin).catch(logAndExit);
@@ -124,7 +124,7 @@ export const newsCommand = new Command("news")
 
         const completedTasks = [];
         if (options.threads) completedTasks.push("forum threads");
-        if (!options.skipDiscord) completedTasks.push("Discord announcements");
+        if (options.threads && !options.skipDiscord && !options.dryRun) completedTasks.push("Discord announcements");
         if (config.osuWikiPath) completedTasks.push("news posts");
 
         log.success("Done generating " + completedTasks.join(", "));

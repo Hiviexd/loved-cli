@@ -83,7 +83,7 @@ export const resultsCommand = new Command("results")
             await lovedAdmin.endPollsChat(roundId, options.dryRun, options.force).catch(logAndExit);
         }
 
-        if (!options.skipDiscord) {
+        if (!options.skipDiscord && !options.dryRun) {
             const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
             const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
             await createPollEndAnnouncement(roundInfo).catch(logAndExit);
