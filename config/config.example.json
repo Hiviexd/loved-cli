@@ -6,8 +6,8 @@
     "lovedRoundId": 0,
     "osuBaseUrl": "https://osu.ppy.sh",
     "osuWikiPath": "",
-    "bannerTitleOverrides": {},
     "updates": true,
+    "bannerTitleOverrides": {},
     "webhookOverrides": [
         {
             "mode": "osu",
