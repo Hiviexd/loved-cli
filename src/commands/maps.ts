@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { mapsDownloadCommand } from "./maps-download";
-import { mapsOpenCommand } from "./maps-open";
+import { mapsDownloadCommand } from "./maps/maps-download";
+import { mapsOpenCommand } from "./maps/maps-open";
 
 export const mapsCommand = new Command("maps")
     .description("Beatmapset-related commands")
