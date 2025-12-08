@@ -32,7 +32,7 @@ This will prompt you for the following required fields:
 - **loved.sh API Key** - API key from loved.sh
 - **loved.sh Admin API Key** - API key provided to admins directly (ask Hivie)
 - **osu-wiki repository path** - local path to your osu-wiki fork
-- **loved round ID** - the current Loved round ID (must update manually every round)
+- **Loved Round ID** - the current Loved round ID (must update manually every round)
 - **Enable automatic Git update checks** - whether to check for script updates automatically
 
 The configuration is stored in `config/config.json`. You can also edit this file directly.

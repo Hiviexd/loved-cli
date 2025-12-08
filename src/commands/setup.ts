@@ -63,7 +63,7 @@ export const setupCommand = new Command("setup")
             showSkipHint: true,
         });
 
-        const lovedRoundId = await prompt(chalk.yellow("loved round ID (must update manually every round)"), {
+        const lovedRoundId = await prompt(chalk.yellow("Loved Round ID (must update manually every round)"), {
             defaultValue: existing.lovedRoundId.toString() || undefined,
             showSkipHint: true,
         });
