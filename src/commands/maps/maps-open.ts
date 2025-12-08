@@ -1,10 +1,10 @@
 import { Command } from "commander";
 import open from "open";
-import { loadConfig } from "../config";
-import { LovedWebClient } from "../clients/LovedWebClient";
-import { Logger,logAndExit } from "../utils/logger";
-import { tryUpdate } from "../utils/git-update";
-import { sleep } from "../utils/misc";
+import { loadConfig } from "../../config";
+import { LovedWebClient } from "../../clients/LovedWebClient";
+import { Logger,logAndExit } from "../../utils/logger";
+import { tryUpdate } from "../../utils/git-update";
+import { sleep } from "../../utils/misc";
 
 const log = new Logger("maps-open");
 

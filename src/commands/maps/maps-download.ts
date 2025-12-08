@@ -2,12 +2,12 @@ import { Command } from "commander";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import axios from "axios";
-import { loadConfig } from "../config";
-import { LovedWebClient } from "../clients/LovedWebClient";
-import { Logger,logAndExit } from "../utils/logger";
-import { tryUpdate } from "../utils/git-update";
-import { sleep } from "../utils/misc";
-import { BannerService } from "../services/BannerService";
+import { loadConfig } from "../../config";
+import { LovedWebClient } from "../../clients/LovedWebClient";
+import { Logger,logAndExit } from "../../utils/logger";
+import { tryUpdate } from "../../utils/git-update";
+import { sleep } from "../../utils/misc";
+import { BannerService } from "../../services/BannerService";
 
 const log = new Logger("maps-download");
 
