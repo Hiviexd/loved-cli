@@ -53,7 +53,7 @@ export abstract class BaseApiClient {
      * Handles API errors and provides human-readable messages
      */
     protected handleError(error: unknown): never {
-        const clientName = chalk.cyanBright(`[${this.constructor.name}]`);
+        const clientName = chalk.bgRed.black(` ${this.constructor.name} `);
 
         if (!axios.isAxiosError(error)) {
             throw new NoTraceError(`${clientName} An unexpected error occurred: ${error}`);
