@@ -9,7 +9,6 @@ import { NewsService } from "../services/NewsService";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
 import { logAndExit } from "./logger";
 import { formatPercent } from "./formatting";
-import { writeFile } from "node:fs/promises";
 
 /**
  * Webhook color constants
@@ -115,7 +114,9 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
         const mainTopicId = modeTopicsResponse.data.topics[mode.id]?.topic_id ?? 0;
 
         const mainInfo = `
-        - [**Click here to view the main forum topic!**](<${config.osuBaseUrl}/community/forums/topics/${mainTopicId}>)\n- [**Click here to download all of this round's picks!**](${NewsService.packUrl(
+        - [**Click here to view the main forum topic!**](<${
+            config.osuBaseUrl
+        }/community/forums/topics/${mainTopicId}>)\n- [**Click here to download all of this round's picks!**](${NewsService.packUrl(
             roundInfo.allNominations[0].round_id,
             roundInfo.name,
             mode
@@ -146,9 +147,6 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
 export async function createPollEndAnnouncement(roundInfo: RoundInfo) {
     const config = await loadConfig();
 
-    // write round info to a json file
-    await writeFile(`round-info-.json`, JSON.stringify(roundInfo, null, 2));
-
     // Parse through each mode
     for (const mode of Ruleset.all()) {
         const webhookUrl = getWebhookUrl(mode, config, roundInfo.discordWebhooks);
@@ -166,24 +164,24 @@ export async function createPollEndAnnouncement(roundInfo: RoundInfo) {
         const webhook = new WebhookBuilder().setWebhookUrl(webhookUrl).setUsername(USERNAME).setMessage(END_MESSAGE);
 
         for (const nomination of filteredNominations) {
-            const yesRatio =
-                (nomination.poll?.result_yes ?? 0) /
-                ((nomination.poll?.result_yes ?? 0) + (nomination.poll?.result_no ?? 0));
+            const resultYes = nomination.poll?.result_yes ?? 0;
+            const resultNo = nomination.poll?.result_no ?? 0;
+            const total = resultYes + resultNo;
+
+            const yesRatio = total > 0 ? resultYes / total : 0;
 
             const passed = yesRatio >= requiredPassThreshold;
 
-            const description = `**${formatPercent(yesRatio)}** — ${nomination.poll?.result_yes ?? 0}:${
-                nomination.poll?.result_no ?? 0
-            }`;
+            const creatorNames = nomination.beatmapset_creators
+            .map((c) => (c.id >= 4294000000 ? c.name : `[${c.name}](${config.osuBaseUrl}/users/${c.id})`))
+            .join(", ");
+
+            const description = `*mapped by ${creatorNames}*\n\n- **${formatPercent(yesRatio)}** — ${resultYes}:${resultNo}`;
 
             const coverUrl = `https://assets.ppy.sh/beatmaps/${nomination.beatmapset.id}/covers/list.jpg`;
 
             const embed = new EmbedBuilder()
-                .setTitle(
-                    `${passed ? "💚" : "💔"} ${nomination.beatmapset.artist} - ${
-                        nomination.beatmapset.title
-                    }`
-                )
+                .setTitle(`${passed ? "💚" : "💔"} ${nomination.beatmapset.artist} - ${nomination.beatmapset.title}`)
                 .setUrl(`${config.osuBaseUrl}/beatmapsets/${nomination.beatmapset.id}`)
                 .setDescription(description)
                 .setColor(passed ? WEBHOOK_COLORS.green : WEBHOOK_COLORS.red)
