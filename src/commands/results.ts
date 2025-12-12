@@ -4,7 +4,7 @@ import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
 import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
-import { createPollEndAnnouncement } from "../utils/discord";
+import { DiscordService } from "../services/DiscordService";
 import { LovedWebClient } from "../clients/LovedWebClient";
 
 const log = new Logger("results");
@@ -76,7 +76,7 @@ export const resultsCommand = new Command("results")
             log.info("Posting Discord results...");
             const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
             const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
-            await createPollEndAnnouncement(roundInfo).catch(logAndExit);
+            await DiscordService.createPollEndAnnouncement(roundInfo).catch(logAndExit);
             log.success("Done posting Discord results");
             return;
         }
@@ -97,7 +97,7 @@ export const resultsCommand = new Command("results")
             log.info("Posting Discord results...");
             const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
             const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
-            await createPollEndAnnouncement(roundInfo).catch(logAndExit);
+            await DiscordService.createPollEndAnnouncement(roundInfo).catch(logAndExit);
             log.success("Done posting Discord results");
         }
 

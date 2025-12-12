@@ -7,7 +7,7 @@ import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
 import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
-import { createPollStartAnnouncement } from "../utils/discord";
+import { DiscordService } from "../services/DiscordService";
 
 const log = new Logger("news");
 
@@ -56,7 +56,7 @@ export const newsCommand = new Command("news")
 
         if (options.discordOnly) {
             log.info("Posting Discord announcements...");
-            await createPollStartAnnouncement(roundInfo, lovedAdmin).catch(logAndExit);
+            await DiscordService.createPollStartAnnouncement(roundInfo, lovedAdmin).catch(logAndExit);
             log.success("Done posting Discord announcements");
             return;
         }
@@ -112,7 +112,7 @@ export const newsCommand = new Command("news")
         if (options.threads && !options.skipDiscord && !options.dryRun) {
             log.info("Posting Discord announcements...");
             const refreshedRoundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
-            await createPollStartAnnouncement(refreshedRoundInfo, lovedAdmin).catch(logAndExit);
+            await DiscordService.createPollStartAnnouncement(refreshedRoundInfo, lovedAdmin).catch(logAndExit);
             log.success("Done posting Discord announcements");
         }
 
