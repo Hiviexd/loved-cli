@@ -43,6 +43,4 @@ export interface Poll {
     ended_at: string;
     result_yes?: number;
     result_no?: number;
-    yesRatio?: number;
-    passed?: boolean;
 }
