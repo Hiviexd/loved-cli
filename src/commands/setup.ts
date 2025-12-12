@@ -59,7 +59,7 @@ export const setupCommand = new Command("setup")
             showSkipHint: true,
         });
 
-        const osuWikiPath = await prompt(chalk.yellow("osu-wiki repository path"), {
+        const osuWikiPath = await prompt(chalk.yellow("osu-wiki directory path"), {
             defaultValue: existing.osuWikiPath || undefined,
             showSkipHint: true,
         });
