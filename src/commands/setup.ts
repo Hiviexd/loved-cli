@@ -4,6 +4,7 @@ import { Logger } from "../utils/logger";
 import { Config } from "../config";
 import { prompt } from "../utils/cli";
 import chalk from "chalk";
+import Ruleset from "../models/Ruleset";
 
 const log = new Logger("setup");
 
@@ -21,7 +22,7 @@ async function loadExistingConfig(): Promise<Config> {
         osuWikiPath: "",
         updates: true,
         bannerTitleOverrides: {} satisfies Record<string, string>,
-        webhookOverrides: [] satisfies { mode: string; url: string }[],
+        webhookOverrides: {} satisfies Record<Ruleset["shortName"], string>,
     };
 
     try {
