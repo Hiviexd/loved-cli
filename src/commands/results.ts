@@ -59,34 +59,46 @@ export const resultsCommand = new Command("results")
         const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
 
         if (options.threadsOnly) {
+            log.info("Ending forum polls...");
             await lovedAdmin.endPollsForum(roundId, options.dryRun, options.force).catch(logAndExit);
+            log.success("Done ending forum polls");
             return;
         }
 
         if (options.messagesOnly) {
+            log.info("Sending chat announcements...");
             await lovedAdmin.endPollsChat(roundId, options.dryRun, options.force).catch(logAndExit);
+            log.success("Done sending chat announcements");
             return;
         }
 
         if (options.discordOnly) {
+            log.info("Posting Discord results...");
             const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
             const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
             await createPollEndAnnouncement(roundInfo).catch(logAndExit);
+            log.success("Done posting Discord results");
             return;
         }
 
         if (!options.skipThreads) {
+            log.info("Ending forum polls...");
             await lovedAdmin.endPollsForum(roundId, options.dryRun, options.force).catch(logAndExit);
+            log.success("Done ending forum polls");
         }
 
         if (!options.skipMessages) {
+            log.info("Sending chat announcements...");
             await lovedAdmin.endPollsChat(roundId, options.dryRun, options.force).catch(logAndExit);
+            log.success("Done sending chat announcements");
         }
 
         if (!options.skipDiscord && !options.dryRun) {
+            log.info("Posting Discord results...");
             const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
             const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
             await createPollEndAnnouncement(roundInfo).catch(logAndExit);
+            log.success("Done posting Discord results");
         }
 
         log.success("Done processing voting results");

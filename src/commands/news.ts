@@ -93,6 +93,8 @@ export const newsCommand = new Command("news")
                 beatmapsets,
                 config.bannerTitleOverrides
             ).catch(logAndExit);
+
+            log.success("Done generating beatmapset banners");
         }
 
         if (options.bannersOnly) {
@@ -103,6 +105,7 @@ export const newsCommand = new Command("news")
         if (options.threads) {
             log.info("Generating forum threads...");
             await lovedAdmin.startPolls(roundId, options.dryRun).catch(logAndExit);
+            log.success("Done generating forum threads");
         }
 
         // Post Discord announcements (only when threads were created so poll URLs exist; skip on dry-run)
@@ -110,6 +113,7 @@ export const newsCommand = new Command("news")
             log.info("Posting Discord announcements...");
             const refreshedRoundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);
             await createPollStartAnnouncement(refreshedRoundInfo, lovedAdmin).catch(logAndExit);
+            log.success("Done posting Discord announcements");
         }
 
         // Generate news post
