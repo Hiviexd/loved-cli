@@ -13,16 +13,16 @@ export abstract class BaseApiClient {
      */
     private getStatusMessage(status: number, url?: string): string {
         const statusMessages: Record<number, string> = {
-            400: "Bad Request - The request was invalid",
-            401: "Unauthorized - Authentication required",
-            403: "Forbidden - You don't have permission to access this route",
-            404: "Not Found - The requested route was not found",
-            408: "Request Timeout - The server timed out waiting for the request",
-            429: "Too Many Requests - Rate limit exceeded, please try again later",
-            500: "Internal Server Error - The server encountered an error",
-            502: "Bad Gateway - The server is temporarily unavailable, please try again later",
-            503: "Service Unavailable - The service is temporarily unavailable",
-            504: "Gateway Timeout - The server did not respond in time",
+            400: "400 Bad Request - The request was invalid",
+            401: "401 Unauthorized - Authentication required",
+            403: "403 Forbidden - You don't have permission to access this route",
+            404: "404 Not Found - The requested route was not found",
+            408: "408 Request Timeout - The server timed out waiting for the request",
+            429: "429 Too Many Requests - Rate limit exceeded, please try again later",
+            500: "500 Internal Server Error - The server encountered an error",
+            502: "502 Bad Gateway - The server is temporarily unavailable, please try again later",
+            503: "503 Service Unavailable - The service is temporarily unavailable",
+            504: "504 Gateway Timeout - The server did not respond in time",
         };
 
         const baseMessage = statusMessages[status] || `HTTP ${status} - Request failed`;
