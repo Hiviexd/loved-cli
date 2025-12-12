@@ -93,7 +93,8 @@ export class Logger {
     }
 
     private base(sev: Severity, msg: string) {
-        return `${this.time()} ${this.moduleTag} ${this.styleMessage(sev, msg)}`;
+        const envTag = process.env.NODE_ENV === "development" ? chalk.magenta.dim(" [dev]") : "";
+        return `${this.time()}${envTag} ${this.moduleTag} ${this.styleMessage(sev, msg)}`;
     }
 
     success(msg: unknown) {
