@@ -99,6 +99,8 @@ export class WebhookBuilder {
             embeds: embedChunks[0],
         });
 
+        await sleep(1000);
+
         // Subsequent messages should *not repeat* content
         for (let i = 1; i < embedChunks.length; i++) {
             await axios.post(this.url, {
@@ -106,6 +108,8 @@ export class WebhookBuilder {
                 avatar_url: this.avatarUrl,
                 embeds: embedChunks[i],
             });
+
+            await sleep(1000);
         }
     }
 }
