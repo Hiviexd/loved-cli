@@ -31,7 +31,7 @@ export class LovedAdminClient extends BaseApiClient {
      */
     public async deleteNomination(nominationId: number): Promise<AdminApiResponse> {
         try {
-            log.info(`Executing DELETE /nominations/${nominationId}`);
+            log.dim().info(`Executing DELETE /nominations/${nominationId}`);
             const response = await this.api.delete(`/nominations/${nominationId}`);
             return response.data;
         } catch (error) {
@@ -191,7 +191,7 @@ export class LovedAdminClient extends BaseApiClient {
      */
     public async createAdminApiKey(userId: number): Promise<AdminPermissionGrantResponse> {
         try {
-            log.info(`Executing POST /admin/key/${userId}`);
+            log.dim().info(`Executing POST /admin/key/${userId}`);
             const response = await this.api.post(`/admin/key/${userId}`);
             return response.data;
         } catch (error) {
@@ -206,7 +206,7 @@ export class LovedAdminClient extends BaseApiClient {
      */
     public async grantAdminPermissions(userId: number): Promise<AdminPermissionGrantResponse> {
         try {
-            log.info(`Executing POST /admin/grant/${userId}`);
+            log.dim().info(`Executing POST /admin/grant/${userId}`);
             const response = await this.api.post(`/admin/grant/${userId}`);
             return response.data;
         } catch (error) {

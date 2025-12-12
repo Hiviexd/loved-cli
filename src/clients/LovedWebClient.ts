@@ -32,6 +32,8 @@ export class LovedWebClient extends BaseApiClient {
                 round,
             } = response.data;
 
+            log.dim().info(`Fetched info for round ${roundId}: ${round.name}`);
+
             const extraGameModeInfo: Record<number, GameModeExtraInfo> = {};
 
             // Process each game mode
