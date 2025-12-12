@@ -61,7 +61,16 @@ The configuration is stored in `config/config.json`. You can also edit this file
 }
 ```
 
-`webhookOverrides` is an array of objects, where each object has a `mode` property (one of `osu`, `taiko`, `catch`, `mania`) and a `url` property. (see `config/config.example.json` for an example)
+`webhookOverrides` is an object of key-value pairs, where the key is the mode's short name and the value is the webhook URL.
+
+```json
+{
+    "osu": "https://discord.com/api/webhooks/.../...",
+    "taiko": "https://discord.com/api/webhooks/.../...",
+    "catch": "https://discord.com/api/webhooks/.../...",
+    "mania": "https://discord.com/api/webhooks/.../..."
+}
+```
 
 ## Usage
 
