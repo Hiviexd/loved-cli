@@ -8,22 +8,5 @@
     "osuWikiPath": "",
     "updates": true,
     "bannerTitleOverrides": {},
-    "webhookOverrides": [
-        {
-            "mode": "osu",
-            "url": ""
-        },
-        {
-            "mode": "taiko",
-            "url": ""
-        },
-        {
-            "mode": "catch",
-            "url": ""
-        },
-        {
-            "mode": "mania",
-            "url": ""
-        }
-    ]
+    "webhookOverrides": {}
 }

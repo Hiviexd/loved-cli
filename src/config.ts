@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import chalk from "chalk";
 import { z } from "zod";
+import Ruleset from "./models/Ruleset";
 
 /**
  * Schema for application configuration
@@ -15,10 +16,7 @@ const ConfigSchema = z.object({
     osuWikiPath: z.string().default(""),
     updates: z.boolean().default(true),
     bannerTitleOverrides: z.record(z.string(), z.string()).default({}),
-    webhookOverrides: z.array(z.object({
-        mode: z.enum(["osu", "taiko", "catch", "mania"]),
-        url: z.url("webhook url must be a valid URL"),
-    })).default([]),
+    webhookOverrides: z.record(z.enum(Ruleset.all().map((r) => r.shortName)), z.url("webhook url must be a valid URL")).default({}),
 });
 
 /**

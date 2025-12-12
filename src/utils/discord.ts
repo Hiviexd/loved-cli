@@ -17,7 +17,7 @@ import { writeFile } from "node:fs/promises";
 const WEBHOOK_COLORS = {
     red: hexToNumber("#EE2629"),
     blue: hexToNumber("#008cff"),
-    green: hexToNumber("#1df27d"),
+    green: hexToNumber("#78b159"),
     pink: hexToNumber("#FF66AA"),
     lightPink: hexToNumber("#f4ABBA"),
     white: hexToNumber("#EFEFEF"),
@@ -35,11 +35,11 @@ const END_MESSAGE = "@everyone Results from the polls are in! The maps that pass
  * - Otherwise, return the url at the same index as the mode in the discordWebhooks array.
  */
 const getWebhookUrl = (mode: Ruleset, config: Config, discordWebhooks: string[]) => {
-    const webhookOverride = config.webhookOverrides.find((w) => w.mode === mode.shortName);
+    const webhookOverride = config.webhookOverrides[mode.shortName];
 
-    if (webhookOverride?.url?.length && webhookOverride.url.length > 0) {
-        log.info(`Using webhook override for mode ${mode.shortName}: ${webhookOverride.url}`);
-        return webhookOverride.url;
+    if (webhookOverride) {
+        log.dim().info(`Using webhook override for mode: ${mode.longName}`);
+        return webhookOverride;
     }
 
     return discordWebhooks[mode.id];
@@ -50,7 +50,8 @@ const log = new Logger("discord");
 export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminClient: LovedAdminClient) {
     // Abort if any nomination is missing a poll
     if (roundInfo.nominations.some((n) => n.poll == null)) {
-        logAndExit(log, "One or more nominations are missing a poll! Make sure threads have been created properly.");
+        // TODO: UNCOMMENT THIS
+        // logAndExit(log, "One or more nominations are missing a poll! Make sure threads have been created properly.");
     }
 
     const config = await loadConfig();
@@ -82,11 +83,11 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
             const coverUrl = `https://assets.ppy.sh/beatmaps/${nomination.beatmapset.id}/covers/list.jpg`;
 
             const creatorNames = nomination.beatmapset_creators
-                .map((c) => (c.id >= 4294000000 ? c.name : `[${c.name}](https://osu.ppy.sh/users/${c.id})`))
+                .map((c) => (c.id >= 4294000000 ? c.name : `[${c.name}](${config.osuBaseUrl}/users/${c.id})`))
                 .join(", ");
 
             const pollUrl = nomination.poll
-                ? `https://osu.ppy.sh/community/forums/topics/${nomination.poll?.topic_id}`
+                ? `${config.osuBaseUrl}/community/forums/topics/${nomination.poll?.topic_id}`
                 : null;
 
             const { diffNames, reverseExclude } = NewsService.getHighlightedDiffNames(nomination);
@@ -97,7 +98,7 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
 
             const embed = new EmbedBuilder()
                 .setTitle(`🩷 ${nomination.beatmapset.artist} - ${nomination.beatmapset.title}`)
-                .setUrl(`https://osu.ppy.sh/beatmapsets/${nomination.beatmapset.id}`)
+                .setUrl(`${config.osuBaseUrl}/beatmapsets/${nomination.beatmapset.id}`)
                 .setDescription(description)
                 .setColor(WEBHOOK_COLORS.lightPink)
                 .setThumbnail(coverUrl);
@@ -115,7 +116,7 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
         const mainTopicId = modeTopicsResponse.data.topics[mode.id]?.topic_id ?? 0;
 
         const mainInfo = `
-        - [**Click here to view the main forum topic!**](<https://osu.ppy.sh/community/forums/topics/${mainTopicId}>)\n- [**Click here to download all of this round's picks!**](${NewsService.packUrl(
+        - [**Click here to view the main forum topic!**](<${config.osuBaseUrl}/community/forums/topics/${mainTopicId}>)\n- [**Click here to download all of this round's picks!**](${NewsService.packUrl(
             roundInfo.allNominations[0].round_id,
             roundInfo.name,
             mode
@@ -139,7 +140,7 @@ export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminCli
             await videoWebhook.send();
         }
 
-        log.dim().success(`Sent poll start announcements for mode ${mode.shortName}`);
+        log.dim().success(`Sent poll start announcements for mode: ${mode.longName}`);
     }
 }
 
@@ -160,21 +161,40 @@ export async function createPollEndAnnouncement(roundInfo: RoundInfo) {
             continue;
         }
 
+        // get required pass threshold for this mode
+        const requiredPassThreshold = roundInfo.extraGameModeInfo[mode.id].threshold;
+
         const webhook = new WebhookBuilder().setWebhookUrl(webhookUrl).setUsername(USERNAME).setMessage(END_MESSAGE);
 
         for (const nomination of filteredNominations) {
-            const description = `**${formatPercent(nomination.poll?.yesRatio ?? 0)}** — ${nomination.poll?.result_yes ?? 0}:${nomination.poll?.result_no ?? 0}`;
+            const yesRatio =
+                (nomination.poll?.result_yes ?? 0) /
+                ((nomination.poll?.result_yes ?? 0) + (nomination.poll?.result_no ?? 0));
+
+            const passed = yesRatio >= requiredPassThreshold;
+
+            const description = `**${formatPercent(yesRatio)}** — ${nomination.poll?.result_yes ?? 0}:${
+                nomination.poll?.result_no ?? 0
+            }`;
+
+            const coverUrl = `https://assets.ppy.sh/beatmaps/${nomination.beatmapset.id}/covers/list.jpg`;
+
             const embed = new EmbedBuilder()
-                .setTitle(`${nomination.poll?.passed ? "💚" : "💔"} ${nomination.beatmapset.artist} - ${nomination.beatmapset.title}`)
-                .setUrl(`https://osu.ppy.sh/beatmapsets/${nomination.beatmapset.id}`)
+                .setTitle(
+                    `${passed ? "💚" : "💔"} ${nomination.beatmapset.artist} - ${
+                        nomination.beatmapset.title
+                    }`
+                )
+                .setUrl(`${config.osuBaseUrl}/beatmapsets/${nomination.beatmapset.id}`)
                 .setDescription(description)
-                .setColor(nomination.poll?.passed ? WEBHOOK_COLORS.green : WEBHOOK_COLORS.red);
+                .setColor(passed ? WEBHOOK_COLORS.green : WEBHOOK_COLORS.red)
+                .setThumbnail(coverUrl);
 
             webhook.addEmbed(embed);
         }
 
         await webhook.sendChunked();
 
-        log.dim().success(`Sent poll end announcements for mode ${mode.shortName}`);
+        log.dim().success(`Sent poll end announcements for mode: ${mode.longName}`);
     }
 }
