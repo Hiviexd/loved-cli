@@ -1,6 +1,8 @@
 node_modules/*
 dist/
 config/config.json
+config/config.*.json
+!config/config.example.json
 config/banner-cache
 config/update-cache
 backgrounds/banner-cache
