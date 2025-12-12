@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { Logger } from "../utils/logger";
-import { Config } from "../config";
+import { Config, CONFIG_FILE_NAME } from "../config";
 import { prompt } from "../utils/cli";
 import chalk from "chalk";
 import Ruleset from "../models/Ruleset";
@@ -26,7 +26,7 @@ async function loadExistingConfig(): Promise<Config> {
     };
 
     try {
-        const content = await readFile("config/config.json", "utf8");
+        const content = await readFile(`config/${CONFIG_FILE_NAME}`, "utf8");
         const existing = JSON.parse(content) as Partial<Config>;
         return {
             ...defaults,
@@ -46,7 +46,7 @@ export const setupCommand = new Command("setup")
 
         log.info("📋 Project Loved Configuration Setup");
         log.dim().info("Press Enter to keep existing value or skip");
-        log.dim().info("You can edit these anytime in config/config.json");
+        log.dim().info(`You can edit these anytime in config/${CONFIG_FILE_NAME}`);
         log.dim().info("You may also create a config.json manually from config/config.example.json\n");
 
         const lovedWebApiKey = await prompt(chalk.yellow("loved.sh API Key (get the key from loved.sh)"), {
@@ -90,9 +90,9 @@ export const setupCommand = new Command("setup")
         };
 
         // Write config
-        await writeFile("config/config.json", JSON.stringify(config, null, 4) + "\n");
+        await writeFile(`config/${CONFIG_FILE_NAME}`, JSON.stringify(config, null, 4) + "\n");
 
-        log.success("✓ Configuration saved to config/config.json");
+        log.success(`✓ Configuration saved to config/${CONFIG_FILE_NAME}`);
 
         // Show warnings for missing required fields
         const warnings: string[] = [];
@@ -105,6 +105,6 @@ export const setupCommand = new Command("setup")
 
         if (warnings.length > 0) {
             log.warning(`⚠ Missing required fields: ${warnings.join(", ")}`);
-            log.dim().info("Edit config/config.json to complete the configuration");
+            log.dim().info(`Edit config/${CONFIG_FILE_NAME} to complete the configuration`);
         }
     });

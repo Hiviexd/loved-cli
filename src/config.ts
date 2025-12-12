@@ -37,22 +37,24 @@ function formatZodErrors(error: z.ZodError): string[] {
     });
 }
 
+export const CONFIG_FILE_NAME = process.env.NODE_ENV === "development" ? "config.dev.json" : "config.json";
+
 /**
- * Loads and validates the configuration from config/config.json
+ * Loads and validates the configuration from config/${CONFIG_FILE_NAME}
  */
 export async function loadConfig(): Promise<Config> {
     let rawConfig: unknown;
 
     try {
-        const configContent = await readFile("config/config.json", "utf8");
+        const configContent = await readFile(`config/${CONFIG_FILE_NAME}`, "utf8");
         rawConfig = JSON.parse(configContent);
     } catch (error) {
         if (error instanceof SyntaxError) {
-            console.error(chalk.red("config/config.json contains invalid JSON"));
+            console.error(chalk.red(`config/${CONFIG_FILE_NAME} contains invalid JSON`));
             console.error(chalk.red(error.message));
         } else {
-            console.error(chalk.red("Failed to load config/config.json"));
-            console.error(chalk.red('Run "pnpm loved setup" to create the config file'));
+            console.error(chalk.red(`Failed to load config/${CONFIG_FILE_NAME}`));
+            console.error(chalk.red(`Run "pnpm loved setup" to create the config file`));
         }
         process.exit(1);
     }
@@ -60,7 +62,7 @@ export async function loadConfig(): Promise<Config> {
     const result = ConfigSchema.safeParse(rawConfig);
 
     if (!result.success) {
-        console.error(chalk.red("Configuration validation failed:"));
+        console.error(chalk.red(`Configuration validation failed for ${CONFIG_FILE_NAME}:`));
         for (const error of formatZodErrors(result.error)) {
             console.error(chalk.red(`  • ${error}`));
         }

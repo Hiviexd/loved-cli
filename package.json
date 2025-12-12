@@ -20,7 +20,8 @@
         "dev": "tsx watch src/index.ts",
         "lint": "eslint src/",
         "lint:fix": "eslint src/ --fix",
-        "loved": "tsx src/index.ts"
+        "loved": "cross-env NODE_ENV=production tsx src/index.ts",
+        "loved:dev": "cross-env NODE_ENV=development tsx src/index.ts"
     },
     "engines": {
         "node": ">=18"
@@ -46,6 +47,7 @@
         "@eslint/js": "^9.39.1",
         "@types/node": "^24.10.1",
         "@types/nunjucks": "^3.2.6",
+        "cross-env": "^10.1.0",
         "eslint": "^9.39.1",
         "tsx": "^4.20.6",
         "typescript": "^5.9.3",
