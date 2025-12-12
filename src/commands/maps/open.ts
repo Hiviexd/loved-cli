@@ -29,7 +29,7 @@ export const mapsOpenCommand = new Command("open")
         log.info(`Opening ${beatmapsetIdSet.size} beatmapsets in browser...`);
 
         for (const beatmapsetId of beatmapsetIdSet) {
-            await open(`https://osu.ppy.sh/beatmapsets/${beatmapsetId}`);
+            await open(`${config.osuBaseUrl}/beatmapsets/${beatmapsetId}`);
             log.dim().success(`Opened beatmapset #${beatmapsetId}`);
             await sleep(500);
         }
