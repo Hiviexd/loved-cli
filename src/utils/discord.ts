@@ -50,8 +50,7 @@ const log = new Logger("discord");
 export async function createPollStartAnnouncement(roundInfo: RoundInfo, adminClient: LovedAdminClient) {
     // Abort if any nomination is missing a poll
     if (roundInfo.nominations.some((n) => n.poll == null)) {
-        // TODO: UNCOMMENT THIS
-        // logAndExit(log, "One or more nominations are missing a poll! Make sure threads have been created properly.");
+        logAndExit(log, "One or more nominations are missing a poll! Make sure threads have been created properly.");
     }
 
     const config = await loadConfig();
