@@ -47,14 +47,14 @@ export const setupCommand = new Command("setup")
         log.info("📋 Project Loved Configuration Setup");
         log.dim().info("Press Enter to keep existing value or skip");
         log.dim().info(`You can edit these anytime in config/${CONFIG_FILE_NAME}`);
-        log.dim().info("You may also create a config.json manually from config/config.example.json\n");
+        log.dim().info(`You may also create a ${CONFIG_FILE_NAME} manually from config/config.example.json`);
 
         const lovedWebApiKey = await prompt(chalk.yellow("loved.sh API Key (get the key from loved.sh)"), {
             defaultValue: existing.lovedWebApiKey || undefined,
             showSkipHint: true,
         });
 
-        const lovedAdminApiKey = await prompt(chalk.yellow("loved.sh Admin API Key (ask Hivie or Irisu for a key)"), {
+        const lovedAdminApiKey = await prompt(chalk.yellow("loved.sh Admin API Key (ask Hivie for a key)"), {
             defaultValue: existing.lovedAdminApiKey || undefined,
             showSkipHint: true,
         });
