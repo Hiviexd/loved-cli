@@ -75,13 +75,14 @@ export class Logger {
         return this;
     }
 
-    // format HH:MM:SS
+    // format HH:MM:SS.SSS
     private time() {
         const d = new Date();
         return chalk.gray(
             `${d.getHours().toString().padStart(2, "0")}:` +
                 `${d.getMinutes().toString().padStart(2, "0")}:` +
-                `${d.getSeconds().toString().padStart(2, "0")}`
+                `${d.getSeconds().toString().padStart(2, "0")}.` +
+                `${d.getMilliseconds().toString().padStart(3, "0")}`
         );
     }
 
