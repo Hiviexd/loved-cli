@@ -105,7 +105,7 @@ export class DiscordService {
 
                 const { diffNames, reverseExclude } = NewsService.getHighlightedDiffNames(nomination);
 
-                const description = `*mapped by ${creatorNames}* ${
+                const description = `Mapped by ${creatorNames} ${
                     pollUrl ? `\n### [📋 Vote for this map here!](${pollUrl})` : ""
                 }`;
 
@@ -202,7 +202,7 @@ export class DiscordService {
                     .map((c) => (c.id >= 4294000000 ? c.name : `[${c.name}](${config.osuBaseUrl}/users/${c.id})`))
                     .join(", ");
 
-                const description = `*mapped by ${creatorNames}*\n\n- **${formatPercent(
+                const description = `Mapped by ${creatorNames}\n\n- **${formatPercent(
                     yesRatio
                 )}** — ${resultYes}:${resultNo}`;
 
