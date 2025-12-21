@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { platform } from "node:process";
 import { Logger } from "./logger";
 import { loadConfig } from "../config";
@@ -12,7 +12,7 @@ const updateCachePath = "config/update-cache";
  * Checks for git updates and applies them if available
  * @param force - Force check even if recently checked
  */
-export async function tryUpdate(force = false): Promise<void> {
+export async function tryUpdate(): Promise<void> {
     const config = await loadConfig();
 
     if (!config.updates) {
@@ -21,6 +21,8 @@ export async function tryUpdate(force = false): Promise<void> {
     }
 
     // Don't check for updates more than once every 6 hours
+    // This was ported from the original CLI, but this is stupid
+    /*
     if (!force) {
         const updateCache = await readFile(updateCachePath, "utf8").catch(() => "0");
         const lastUpdateTime = Number.parseInt(updateCache, 10);
@@ -29,6 +31,7 @@ export async function tryUpdate(force = false): Promise<void> {
             return;
         }
     }
+        */
 
     // Check execute permission for git and npm
     if (

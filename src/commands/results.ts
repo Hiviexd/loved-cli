@@ -49,7 +49,7 @@ export const resultsCommand = new Command("results")
             );
         }
 
-        if (options.skipUpdate) {
+        if (!options.skipUpdate) {
             await tryUpdate();
         }
 

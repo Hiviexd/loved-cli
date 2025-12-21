@@ -42,7 +42,7 @@ export const newsCommand = new Command("news")
             logAndExit(log, "Cannot use --dry-run without --threads");
         }
 
-        if (options.skipUpdate) {
+        if (!options.skipUpdate) {
             await tryUpdate();
         }
 

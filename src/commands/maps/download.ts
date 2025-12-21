@@ -16,7 +16,7 @@ export const mapsDownloadCommand = new Command("download")
     .option("-r, --round <id>", "Override the round ID from config", parseInt)
     .option("--skip-update", "Skip checking for updates")
     .action(async (options) => {
-        if (options.skipUpdate) {
+        if (!options.skipUpdate) {
             await tryUpdate();
         }
 
