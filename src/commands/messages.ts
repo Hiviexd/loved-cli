@@ -16,7 +16,7 @@ export const messagesCommand = new Command("messages")
     .option("--dry-run", "Preview messages without sending them")
     .option("--skip-update", "Skip checking for updates")
     .action(async (options) => {
-        if (!options.skipUpdate) {
+        if (options.skipUpdate) {
             await tryUpdate();
         }
 

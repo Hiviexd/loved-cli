@@ -42,8 +42,8 @@ export const newsCommand = new Command("news")
             logAndExit(log, "Cannot use --dry-run without --threads");
         }
 
-        if (!options.skipUpdate) {
-            await tryUpdate(options.threads);
+        if (options.skipUpdate) {
+            await tryUpdate();
         }
 
         const config = await loadConfig();
