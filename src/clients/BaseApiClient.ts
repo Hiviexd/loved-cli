@@ -9,44 +9,13 @@ export abstract class BaseApiClient {
     protected api!: AxiosInstance;
 
     /**
-     * Gets a human-readable error message for HTTP status codes
+     * Initializes an axios instance with the given base URL and headers
      */
-    private getStatusMessage(status: number, url?: string): string {
-        const statusMessages: Record<number, string> = {
-            400: "400 Bad Request - The request was invalid",
-            401: "401 Unauthorized - Authentication required",
-            403: "403 Forbidden - You don't have permission to access this route",
-            404: "404 Not Found - The requested route was not found",
-            408: "408 Request Timeout - The server timed out waiting for the request",
-            429: "429 Too Many Requests - Rate limit exceeded, please try again later",
-            500: "500 Internal Server Error - The server encountered an error",
-            502: "502 Bad Gateway - The server is temporarily unavailable, please try again later",
-            503: "503 Service Unavailable - The service is temporarily unavailable",
-            504: "504 Gateway Timeout - The server did not respond in time",
-        };
-
-        const baseMessage = statusMessages[status] || `HTTP ${status} - Request failed`;
-        return url ? `${baseMessage} (${url})` : baseMessage;
-    }
-
-    /**
-     * Checks if the response data is HTML (like error pages)
-     */
-    private isHtmlResponse(data: unknown): boolean {
-        if (typeof data === "string") {
-            return data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html");
-        }
-        return false;
-    }
-
-    /**
-     * Extracts the request URL from the error for context
-     */
-    private getRequestUrl(error: AxiosError): string {
-        const baseURL = error.config?.baseURL || "";
-        const url = error.config?.url || "";
-        const method = error.config?.method?.toUpperCase() || "REQUEST";
-        return `${method} ${baseURL}${url}`;
+    protected createApi(baseUrl: string, headers: Record<string, string>): AxiosInstance {
+        return axios.create({
+            baseURL: baseUrl,
+            headers,
+        });
     }
 
     /**
@@ -121,12 +90,43 @@ export abstract class BaseApiClient {
     }
 
     /**
-     * Initializes an axios instance with the given base URL and headers
+     * Gets a human-readable error message for HTTP status codes
      */
-    protected createApi(baseUrl: string, headers: Record<string, string>): AxiosInstance {
-        return axios.create({
-            baseURL: baseUrl,
-            headers,
-        });
+    private getStatusMessage(status: number, url?: string): string {
+        const statusMessages: Record<number, string> = {
+            400: "400 Bad Request - The request was invalid",
+            401: "401 Unauthorized - Authentication required",
+            403: "403 Forbidden - You don't have permission to access this route",
+            404: "404 Not Found - The requested route was not found",
+            408: "408 Request Timeout - The server timed out waiting for the request",
+            429: "429 Too Many Requests - Rate limit exceeded, please try again later",
+            500: "500 Internal Server Error - The server encountered an error",
+            502: "502 Bad Gateway - The server is temporarily unavailable, please try again later",
+            503: "503 Service Unavailable - The service is temporarily unavailable",
+            504: "504 Gateway Timeout - The server did not respond in time",
+        };
+
+        const baseMessage = statusMessages[status] || `HTTP ${status} - Request failed`;
+        return url ? `${baseMessage} (${url})` : baseMessage;
+    }
+
+    /**
+     * Checks if the response data is HTML (like error pages)
+     */
+    private isHtmlResponse(data: unknown): boolean {
+        if (typeof data === "string") {
+            return data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html");
+        }
+        return false;
+    }
+
+    /**
+     * Extracts the request URL from the error for context
+     */
+    private getRequestUrl(error: AxiosError): string {
+        const baseURL = error.config?.baseURL || "";
+        const url = error.config?.url || "";
+        const method = error.config?.method?.toUpperCase() || "REQUEST";
+        return `${method} ${baseURL}${url}`;
     }
 }
