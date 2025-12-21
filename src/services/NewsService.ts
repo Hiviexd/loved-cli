@@ -1,4 +1,4 @@
-import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, writeFile, access, constants } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import chalk from "chalk";
 import { BannerService } from "./BannerService";
@@ -54,7 +54,9 @@ export class NewsService {
     public static getExtraBeatmapsetInfo(nomination: Nomination): string {
         const beatmaps: Beatmap[] = [];
         const beatmapsForMode = nomination.beatmaps.filter((b) => b.game_mode === nomination.game_mode.id);
-        const { diffNames: excludedDiffNames, reverseExclude } = NewsService.getHighlightedDiffNames(nomination, { bracketed: true });
+        const { diffNames: excludedDiffNames, reverseExclude } = NewsService.getHighlightedDiffNames(nomination, {
+            bracketed: true,
+        });
 
         for (const beatmap of beatmapsForMode) {
             const isExcluded = typeof beatmap.excluded === "boolean" ? beatmap.excluded : beatmap.excluded === 1;
@@ -177,7 +179,26 @@ export class NewsService {
         beatmapsets: Beatmapset[],
         bannerTitleOverrides: Record<string, string>
     ): Promise<void> {
-        await mkdir(bannersPath, { recursive: true });
+        try {
+            await mkdir(bannersPath, { recursive: true });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `Failed to create banners directory ${bannersPath}: ${errorMessage}. ` +
+                    `This may be a permissions issue. Ensure you have write permissions to the osu-wiki directory.`
+            );
+        }
+
+        // Verify directory is writable
+        try {
+            await access(bannersPath, constants.W_OK);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `Banners directory ${bannersPath} exists but is not writable: ${errorMessage}. ` +
+                    `This is likely a permissions issue. Check the directory permissions.`
+            );
+        }
 
         await Promise.all(
             beatmapsets.map((beatmapset) =>
@@ -306,9 +327,29 @@ export class NewsService {
             );
         }
 
-        await mkdir(dirname(newsPath), { recursive: true });
-        await writeFile(
-            newsPath,
+        const newsDir = dirname(newsPath);
+        try {
+            await mkdir(newsDir, { recursive: true });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `Failed to create directory ${newsDir}: ${errorMessage}. ` +
+                    `This may be a permissions issue. Ensure you have write permissions to the osu-wiki directory.`
+            );
+        }
+
+        // Verify directory is writable
+        try {
+            await access(newsDir, constants.W_OK);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `Directory ${newsDir} exists but is not writable: ${errorMessage}. ` +
+                    `This is likely a permissions issue. Check the directory permissions.`
+            );
+        }
+
+        const newsContent =
             TemplateService.render(newsTemplate, {
                 AUTHOR: roundInfo.newsAuthorName,
                 DATE: roundInfo.postDateString,
@@ -321,8 +362,28 @@ export class NewsService {
                 TIME: roundInfo.postTimeString,
                 TITLE: roundInfo.title,
                 VIDEO: videoHtml(roundInfo.video),
-            }) + "\n"
-        );
+            }) + "\n";
+
+        try {
+            await writeFile(newsPath, newsContent);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `Failed to write news post file ${newsPath}: ${errorMessage}. ` +
+                    `This may be a permissions issue. Ensure you have write permissions to the directory.`
+            );
+        }
+
+        // Verify file was actually created
+        try {
+            await access(newsPath, constants.F_OK);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(
+                `News post file ${newsPath} was not created successfully: ${errorMessage}. ` +
+                    `The write operation completed but the file does not exist. This may indicate a permissions or disk space issue.`
+            );
+        }
 
         log.dim().success(`Generated news post at ${newsPath}`);
     }
