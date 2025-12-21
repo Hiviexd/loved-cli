@@ -77,7 +77,23 @@ export async function tryUpdate(): Promise<void> {
     // Restart program if updated
     if (update) {
         log.warning("Restarting...\n");
-        spawnSync(process.argv[0], process.argv.slice(1), { stdio: "inherit" });
+
+        // Detect if we're running from source (via tsx) or compiled code
+        const scriptPath = process.argv[1];
+        const isRunningFromSource = scriptPath.endsWith(".ts");
+
+        if (isRunningFromSource) {
+            // Running from source via tsx - restart with npx tsx
+            const npxCommand = platform === "win32" ? "npx.cmd" : "npx";
+            spawnSync(npxCommand, ["tsx", ...process.argv.slice(1)], {
+                stdio: "inherit",
+                shell: platform === "win32",
+            });
+        } else {
+            // Running from compiled code - restart normally
+            spawnSync(process.argv[0], process.argv.slice(1), { stdio: "inherit" });
+        }
+
         process.exit();
     }
 }
