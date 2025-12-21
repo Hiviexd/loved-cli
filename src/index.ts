@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 // Force color output
 process.env.FORCE_COLOR = "2";
 
