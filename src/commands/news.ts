@@ -44,6 +44,7 @@ export const newsCommand = new Command("news")
 
         if (!options.skipUpdate) {
             await tryUpdate();
+            
         }
 
         const config = await loadConfig();
