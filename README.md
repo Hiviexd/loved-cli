@@ -47,7 +47,7 @@ The configuration is stored in `config/config.json`. You can also edit this file
 | `lovedAdminBaseUrl` | loved.sh admin base URL | ✅ | `https://admin.loved.sh` |
 | `lovedRoundId` | Current round ID | ✅ | - |
 | `osuBaseUrl` | osu! base URL | ✅ | `https://osu.ppy.sh` |
-| `osuWikiPath` | Path to osu-wiki repository | ✅ | - |
+| `osuWikiPath` | **Absolute** path to osu-wiki repository | ✅ | - |
 | `updates` | Enable automatic Git update checks | ✅ | `true` |
 | `bannerTitleOverrides` | Custom banner titles by beatmapset ID | ❌ | - |
 | `webhookOverrides` | Custom webhook URLs by mode | ❌ | - |
