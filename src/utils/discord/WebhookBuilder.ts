@@ -1,7 +1,7 @@
-import axios from "axios";
 import { DiscordEmbed } from "../../models/discord";
 import { EmbedBuilder } from "./EmbedBuilder";
 import { sleep } from "../misc";
+import { DiscordApiClient } from "../../clients/DiscordApiClient";
 
 /**
  * Builder class for configuring and sending Discord webhooks with a fluent API
@@ -61,7 +61,9 @@ export class WebhookBuilder {
      * Send the webhook
      */
     public async send(): Promise<void> {
-        await axios.post(this.url, {
+        const discord = new DiscordApiClient(this.url);
+
+        await discord.sendWebhook({
             username: this.username,
             avatar_url: this.avatarUrl,
             embeds: this.embeds,
@@ -91,8 +93,10 @@ export class WebhookBuilder {
             embedChunks.push(this.embeds.slice(i, i + maxEmbedsPerMessage));
         }
 
+        const discord = new DiscordApiClient(this.url);
+
         // Send first message with content + username + avatar
-        await axios.post(this.url, {
+        await discord.sendWebhook({
             username: this.username,
             avatar_url: this.avatarUrl,
             content: this.message,
@@ -103,7 +107,7 @@ export class WebhookBuilder {
 
         // Subsequent messages should *not repeat* content
         for (let i = 1; i < embedChunks.length; i++) {
-            await axios.post(this.url, {
+            await discord.sendWebhook({
                 username: this.username,
                 avatar_url: this.avatarUrl,
                 embeds: embedChunks[i],

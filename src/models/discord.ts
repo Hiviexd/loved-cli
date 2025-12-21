@@ -17,7 +17,7 @@ export interface DiscordEmbed {
     description?: string;
     color: number;
     fields?: DiscordField[];
-    image? : {
+    image?: {
         url: string;
     };
     thumbnail?: {
@@ -33,3 +33,9 @@ export interface DiscordEmbed {
     };
 }
 
+export interface WebhookPayload {
+    username?: string;
+    avatar_url?: string;
+    embeds?: DiscordEmbed[];
+    content?: string;
+}
