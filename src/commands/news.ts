@@ -6,7 +6,7 @@ import { NewsService } from "../services/NewsService";
 import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
-import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
+import { checkMutuallyExclusiveFlags, checkFlagConflicts, promptRoundId } from "../utils/cli";
 import { DiscordService } from "../services/DiscordService";
 
 const log = new Logger("news");
@@ -47,7 +47,7 @@ export const newsCommand = new Command("news")
         }
 
         const config = await loadConfig();
-        const roundId = options.round ?? config.lovedRoundId;
+        const roundId = options.round ?? (await promptRoundId());
 
         const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);

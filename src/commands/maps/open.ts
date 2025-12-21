@@ -5,6 +5,7 @@ import { LovedWebClient } from "../../clients/LovedWebClient";
 import { Logger,logAndExit } from "../../utils/logger";
 import { tryUpdate } from "../../utils/git-update";
 import { sleep } from "../../utils/misc";
+import { promptRoundId } from "../../utils/cli";
 
 const log = new Logger("maps-open");
 
@@ -18,7 +19,7 @@ export const mapsOpenCommand = new Command("open")
         }
 
         const config = await loadConfig();
-        const roundId = options.round ?? config.lovedRoundId;
+        const roundId = options.round ?? (await promptRoundId());
 
         const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);

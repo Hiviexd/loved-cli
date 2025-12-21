@@ -4,10 +4,11 @@ import { join } from "node:path";
 import axios from "axios";
 import { loadConfig } from "../../config";
 import { LovedWebClient } from "../../clients/LovedWebClient";
-import { Logger,logAndExit } from "../../utils/logger";
+import { Logger, logAndExit } from "../../utils/logger";
 import { tryUpdate } from "../../utils/git-update";
 import { sleep } from "../../utils/misc";
 import { BannerService } from "../../services/BannerService";
+import { promptRoundId } from "../../utils/cli";
 
 const log = new Logger("maps-download");
 
@@ -21,7 +22,7 @@ export const mapsDownloadCommand = new Command("download")
         }
 
         const config = await loadConfig();
-        const roundId = options.round ?? config.lovedRoundId;
+        const roundId = options.round ?? (await promptRoundId());
 
         const lovedWeb = new LovedWebClient(config.lovedWebBaseUrl, config.lovedWebApiKey);
         const roundInfo = await lovedWeb.getRoundInfo(roundId).catch(logAndExit);

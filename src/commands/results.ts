@@ -3,7 +3,7 @@ import { loadConfig } from "../config";
 import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
-import { checkMutuallyExclusiveFlags, checkFlagConflicts } from "../utils/cli";
+import { checkMutuallyExclusiveFlags, checkFlagConflicts, promptRoundId } from "../utils/cli";
 import { DiscordService } from "../services/DiscordService";
 import { LovedWebClient } from "../clients/LovedWebClient";
 
@@ -54,7 +54,7 @@ export const resultsCommand = new Command("results")
         }
 
         const config = await loadConfig();
-        const roundId = options.round ?? config.lovedRoundId;
+        const roundId = options.round ?? (await promptRoundId());
 
         const lovedAdmin = new LovedAdminClient(config.lovedAdminBaseUrl, config.lovedAdminApiKey);
 

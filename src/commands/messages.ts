@@ -5,7 +5,7 @@ import { LovedWebClient } from "../clients/LovedWebClient";
 import { Logger, logAndExit } from "../utils/logger";
 import { tryUpdate } from "../utils/git-update";
 import { LovedAdminClient } from "../clients/LovedAdminClient";
-import { prompt } from "../utils/cli";
+import { prompt, promptRoundId } from "../utils/cli";
 
 const log = new Logger("messages");
 
@@ -21,7 +21,7 @@ export const messagesCommand = new Command("messages")
         }
 
         const config = await loadConfig();
-        const roundId = options.round ?? config.lovedRoundId;
+        const roundId = options.round ?? (await promptRoundId());
 
         // Get poll start guess
         let pollStartGuess = options.pollStart;

@@ -2,6 +2,8 @@ import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import chalk from "chalk";
 import { logAndExit, Logger } from "./logger";
+import { readFile, writeFile } from "node:fs/promises";
+import { CONFIG_FILE_NAME } from "../config";
 
 /**
  * Checks if only one flag in a group is set
@@ -58,4 +60,48 @@ export async function prompt(
     } finally {
         rl.close();
     }
+}
+
+/**
+ * Prompts the user for a loved round ID, using the current saved value as default.
+ * If the user inputs a different ID, it will update the config file with the new value.
+ * @returns The round ID (either the existing one or the newly entered one)
+ */
+export async function promptRoundId(): Promise<number> {
+    // Load existing config to get current round ID
+    let currentRoundId = 0;
+    try {
+        const content = await readFile(`config/${CONFIG_FILE_NAME}`, "utf8");
+        const config = JSON.parse(content) as { lovedRoundId?: number };
+        currentRoundId = config.lovedRoundId ?? 0;
+    } catch {
+        // Config file doesn't exist or is invalid, use default of 0
+        currentRoundId = 0;
+    }
+
+    const defaultValue = currentRoundId > 0 ? currentRoundId.toString() : undefined;
+    const answer = await prompt(chalk.yellow("Input the ID of the Loved round you're currently operating on"), {
+        defaultValue,
+        showSkipHint: !defaultValue,
+    });
+
+    const newRoundId = answer.trim() ? parseInt(answer.trim(), 10) : currentRoundId;
+
+    // If the user entered a different ID, update the config file
+    if (newRoundId !== currentRoundId && answer.trim()) {
+        try {
+            const content = await readFile(`config/${CONFIG_FILE_NAME}`, "utf8");
+            const config = JSON.parse(content) as Record<string, unknown>;
+            config.lovedRoundId = newRoundId;
+            await writeFile(`config/${CONFIG_FILE_NAME}`, JSON.stringify(config, null, 4) + "\n");
+            console.log(chalk.green.dim(`Updated ${CONFIG_FILE_NAME} with new round ID: ${newRoundId}`));
+        } catch {
+            // If we can't update the config, just return the new value
+            // Warn the user that they need to update it manually
+            console.log(chalk.yellow.dim("Failed to update the config file. Please update it manually."));
+            console.log(chalk.yellow.dim(`Proceeding with value ${newRoundId} for this command.`));
+        }
+    }
+
+    return newRoundId;
 }
