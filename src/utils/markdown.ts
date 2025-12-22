@@ -10,7 +10,7 @@ export function escapeMarkdown(text: string): string {
     if (typeof text !== "string") return String(text);
 
     // Escape universal special characters
-    text = text.replace(/[\\`*_{}[\]<>]/g, m => "\\" + m);
+    text = text.replace(/[\\`*_{}[\]<>]/g, (m) => "\\" + m);
 
     // Escape image markers "![" → "\!["
     text = text.replace(/!\[/g, "\\![");
@@ -87,10 +87,7 @@ export function convertToMarkdown(bbcode: string): string {
 
     let result = bbcode;
 
-    // First, convert BBCode tags to markdown
-    // We use placeholders to protect converted markdown from being escaped
-
-    // Store converted parts with unique placeholders
+    // Store converted parts with unique placeholders to protect them from escaping
     const placeholders: Map<string, string> = new Map();
     let placeholderIndex = 0;
 
@@ -100,41 +97,50 @@ export function convertToMarkdown(bbcode: string): string {
         return key;
     }
 
-    // Convert [url=...]...[/url] to [text](url)
-    result = result.replace(/\[url=([^\]]+)\](.+?)\[\/url\]/gis, (_, url, text) => {
-        return createPlaceholder(`[${escapeMarkdown(text)}](${url})`);
-    });
+    // Process tags iteratively to handle nested/chained tags like [b][i]text[/i][/b]
+    // The non-greedy regex naturally processes innermost tags first
+    let hasChanged = true;
+    let iterations = 0;
+    const maxIterations = 50; // Prevent infinite loops
 
-    // Convert [b]...[/b] to **...**
-    result = result.replace(/\[b\](.+?)\[\/b\]/gis, (_, content) => {
-        return createPlaceholder(`**${content}**`);
-    });
+    while (hasChanged && iterations < maxIterations) {
+        iterations++;
+        const before = result;
 
-    // Convert [i]...[/i] to *...*
-    result = result.replace(/\[i\](.+?)\[\/i\]/gis, (_, content) => {
-        return createPlaceholder(`*${content}*`);
-    });
+        // Remove tags that don't map to markdown
+        result = result.replace(/\[u\](.+?)\[\/u\]/gis, "$1");
+        result = result.replace(/\[color=[^\]]+\](.+?)\[\/color\]/gis, "$1");
 
-    // Convert [u]...[/u] - no markdown equivalent, just keep text
-    result = result.replace(/\[u\](.+?)\[\/u\]/gis, "$1");
+        // Convert formatting tags to markdown with placeholders
+        // Convert [s]...[/s] to ~~...~~
+        result = result.replace(/\[s\](.+?)\[\/s\]/gis, (_, content) => {
+            return `${createPlaceholder("~~")}${content}${createPlaceholder("~~")}`;
+        });
+        // Convert [i]...[/i] to *...*
+        result = result.replace(/\[i\](.+?)\[\/i\]/gis, (_, content) => {
+            return `${createPlaceholder("*")}${content}${createPlaceholder("*")}`;
+        });
+        // Convert [b]...[/b] to **...**
+        result = result.replace(/\[b\](.+?)\[\/b\]/gis, (_, content) => {
+            return `${createPlaceholder("**")}${content}${createPlaceholder("**")}`;
+        });
 
-    // Convert [s]...[/s] to ~~...~~
-    result = result.replace(/\[s\](.+?)\[\/s\]/gis, (_, content) => {
-        return createPlaceholder(`~~${content}~~`);
-    });
+        // Convert [url=...]...[/url] to [text](url)
+        result = result.replace(/\[url=([^\]]+)\](.+?)\[\/url\]/gis, (_, url, text) => {
+            return createPlaceholder(`[${text}](${url})`);
+        });
 
-    // Convert [color=...]...[/color] - remove color, keep text
-    result = result.replace(/\[color=[^\]]+\](.+?)\[\/color\]/gis, "$1");
+        // Convert [quote]...[/quote] to > ...
+        result = result.replace(/\[quote(?:="[^"]*")?\](.+?)\[\/quote\]/gis, (_, content) => {
+            const quoted = content
+                .split("\n")
+                .map((line: string) => `> ${line}`)
+                .join("\n");
+            return createPlaceholder(quoted);
+        });
 
-    // Convert [quote]...[/quote] or [quote="..."]...[/quote] to > ...
-    result = result.replace(/\[quote(?:="[^"]*")?\](.+?)\[\/quote\]/gis, (_, content) => {
-        // Add > prefix to each line
-        const quoted = content
-            .split("\n")
-            .map((line: string) => `> ${line}`)
-            .join("\n");
-        return createPlaceholder(quoted);
-    });
+        hasChanged = result !== before;
+    }
 
     // Now escape any remaining markdown special characters in non-placeholder text
     // Split by placeholders, escape, and rejoin
