@@ -180,7 +180,7 @@ export class BannerService {
 
             await sharp(buffer)
                 .jpeg({
-                    quality: 80,
+                    quality: 95,
                     mozjpeg: true, // Use mozjpeg for better compression
                 })
                 .toFile(outputFile);
