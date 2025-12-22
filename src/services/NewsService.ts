@@ -261,7 +261,7 @@ export class NewsService {
             packUrls[gameMode.id] = NewsService.packUrl(roundId, roundInfo.title, gameMode);
 
             if (nominationsForMode.length === 0) {
-                log.warning(`Skipping ${gameMode.longName}, there are no nominations`);
+                log.warning(`⚠ Skipping ${gameMode.longName}, there are no nominations`);
                 continue;
             }
 
