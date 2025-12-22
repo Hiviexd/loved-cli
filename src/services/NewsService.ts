@@ -271,9 +271,9 @@ export class NewsService {
                 const errors: string[] = [];
 
                 if (nomination.description == null) {
-                    errors.push("missing description");
+                    errors.push("a missing description");
                 } else if (nomination.description_state === 0) {
-                    errors.push("unreviewed description");
+                    errors.push("an unreviewed description");
                 }
 
                 if (nomination.beatmapset_creators.length === 0) {
@@ -281,8 +281,10 @@ export class NewsService {
                 }
 
                 if (errors.length > 0) {
-                    log.warning(`Skipping nomination #${nomination.id} with ${joinList(errors)}`);
-                    continue;
+                    log.warning(`⚠ Nomination #${nomination.id} has ${joinList(errors)}`);
+                    // This was used to skip the nomination entirely if there were any errors.
+                    // However, I don't want it to be this way for now.
+                    // continue;
                 }
 
                 nominationStrings.push(
